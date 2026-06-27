@@ -39,14 +39,16 @@ function NomorDataLoader({ eventId, nomor, onData }) {
   return null
 }
 
-export default function Reports({ eventId }) {
+export default function Reports({ eventId: initialEventId }) {
   const { user, showToast } = useApp()
   const { navigate } = useNav()
   const { events } = useEvents()
-  const { nomors } = useNomors(eventId)
+  const [selectedEventId, setSelectedEventId] = useState(initialEventId || null)
   const [generating, setGenerating] = useState(false)
-  const [nomorData, setNomorData] = useState({}) // { [nomorId]: { teams, matches } }
+  const [nomorData, setNomorData] = useState({})
 
+  const eventId = selectedEventId
+  const { nomors } = useNomors(eventId)
   const event = events.find(e => e.id === eventId)
 
   const handleNomorData = (nomorId, teams, matches) => {
@@ -582,20 +584,57 @@ export default function Reports({ eventId }) {
     setGenerating(false)
   }
 
-  // If no eventId, show picker
+  // If no eventId selected, show event picker
   if (!eventId || !event) {
-    const { events } = useEvents()
     return (
       <div>
         <div style={{ marginBottom: 32 }}>
           <div className="tag-line" style={{ marginBottom: 8 }}>Generate</div>
           <h1 style={{ fontSize: 48, color: 'var(--gold)' }}>LAPORAN PDF</h1>
+          <p style={{ color: 'var(--gray-600)', fontSize: 14, marginTop: 4 }}>Pilih event untuk membuat laporan PDF.</p>
         </div>
-        <div className="card empty-state">
-          <div style={{ fontSize: 40, marginBottom: 16 }}>📄</div>
-          <p>Pilih event dari Daftar Event untuk membuat laporan.</p>
-          <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={() => navigate('events')}>→ Ke Daftar Event</button>
-        </div>
+        {events.length === 0 ? (
+          <div className="card empty-state">
+            <div style={{ fontSize: 40, marginBottom: 16 }}>📄</div>
+            <p>Belum ada event. Buat event terlebih dahulu.</p>
+            <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={() => navigate('events')}>→ Ke Daftar Event</button>
+          </div>
+        ) : (
+          <div className="card">
+            <h2 style={{ fontSize: 20, color: 'var(--white)', marginBottom: 16 }}>PILIH EVENT</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {events.map(ev => (
+                <div key={ev.id}
+                  onClick={() => setSelectedEventId(ev.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '16px 20px', background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(64,145,108,0.2)', borderRadius: 10,
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--gold)'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(64,145,108,0.2)'}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{ev.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--gray-600)' }}>
+                      {ev.location && `📍 ${ev.location}`}
+                      {ev.date && ` · 📅 ${new Date(ev.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span className={`badge ${ev.status === 'selesai' ? 'badge-gold' : ev.status === 'berlangsung' ? 'badge-green' : 'badge-gray'}`}>
+                      {ev.status === 'selesai' ? 'Selesai' : ev.status === 'berlangsung' ? 'Berlangsung' : 'Persiapan'}
+                    </span>
+                    <button className="btn btn-primary" style={{ padding: '7px 16px', fontSize: 13 }}>
+                      📄 Buat Laporan
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -606,9 +645,16 @@ export default function Reports({ eventId }) {
       {nomors.map(n => <NomorDataLoader key={n.id} eventId={eventId} nomor={n} onData={handleNomorData} />)}
 
       <div style={{ marginBottom: 32 }}>
-        <div className="tag-line" style={{ marginBottom: 8 }}>Generate</div>
-        <h1 style={{ fontSize: 48, color: 'var(--gold)' }}>LAPORAN PDF</h1>
-        <p style={{ color: 'var(--gray-600)', fontSize: 14, marginTop: 4 }}>Event: <strong style={{ color: 'var(--white)' }}>{event.name}</strong></p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div className="tag-line" style={{ marginBottom: 8 }}>Generate</div>
+            <h1 style={{ fontSize: 48, color: 'var(--gold)' }}>LAPORAN PDF</h1>
+            <p style={{ color: 'var(--gray-600)', fontSize: 14, marginTop: 4 }}>Event: <strong style={{ color: 'var(--white)' }}>{event.name}</strong></p>
+          </div>
+          <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={() => { setSelectedEventId(null); setNomorData({}) }}>
+            ← Ganti Event
+          </button>
+        </div>
       </div>
 
       {/* Preview struktur PDF */}
