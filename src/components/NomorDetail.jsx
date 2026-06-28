@@ -193,15 +193,36 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
         </button>
       </div>
 
-      {champion && (
-        <div style={{ background: 'linear-gradient(135deg, rgba(244,160,28,0.15), rgba(244,160,28,0.05))', border: '1px solid var(--gold)', borderRadius: 12, padding: '16px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 32 }}>🏆</span>
-          <div>
-            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--gold)', letterSpacing: 2, textTransform: 'uppercase' }}>Juara</div>
-            <div style={{ fontSize: 24, fontFamily: 'var(--font-display)', color: 'var(--gold)' }}>{getTeamName(champion)}</div>
+      {/* Juara display */}
+      {champion && (() => {
+        const final = koMatches.find(m => m.round === 1 && m.status === 'done')
+        const runnerUp = final ? (final.winnerId === final.homeId ? final.awayId : final.homeId) : null
+        const semis = koMatches.filter(m => m.round === 2 && m.status === 'done')
+        const juara3 = semis.map(m => m.winnerId === m.homeId ? m.awayId : m.homeId)
+        return (
+          <div style={{ background: 'linear-gradient(135deg, #fffbf0, #fff8e0)', border: '2px solid var(--gold)', borderRadius: 14, padding: '20px 24px', marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--gold)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14, fontWeight: 700 }}>🏆 Hasil Akhir Turnamen</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+              {[
+                { medal: '🥇', label: 'JUARA I', id: champion, bg: '#fffbf0', border: '#f4a01c' },
+                { medal: '🥈', label: 'JUARA II', id: runnerUp, bg: '#f8f8f8', border: '#aaaaaa' },
+                ...juara3.map(id => ({ medal: '🥉', label: 'JUARA III', id, bg: '#fff8f0', border: '#cd7f32' })),
+              ].filter(j => j.id).map((j, i) => (
+                <div key={i} style={{ background: j.bg, border: `1.5px solid ${j.border}`, borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 24 }}>{j.medal}</span>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#888', fontFamily: 'var(--font-mono)', letterSpacing: 1 }}>{j.label}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>{getTeamName(j.id)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {semis.length < 2 && juara3.length < 2 && (
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 10 }}>* Juara III bersama akan muncul setelah kedua semifinal selesai</p>
+            )}
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {koMatches.length === 0 ? (
         <div className="card empty-state">
@@ -210,37 +231,85 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
           <p style={{ fontSize: 13, marginTop: 8 }}>Klik "Setup Bracket" untuk memulai fase knockout.</p>
         </div>
       ) : (
-        <div style={{ overflowX: 'auto', paddingBottom: 12 }}>
-          <div style={{ display: 'flex', gap: 20, minWidth: 'max-content' }}>
-            {rounds.map(round => {
+        <div style={{ overflowX: 'auto', paddingBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', minWidth: 'max-content', position: 'relative' }}>
+            {rounds.map((round, ri) => {
               const rMatches = koMatches.filter(m => m.round === round)
               const rName = rMatches[0]?.roundName || `Babak ${round}`
+              const matchH = 72 // match card height
+              const matchGap = 16
+              const totalRounds = rounds.length
+              const spacing = Math.pow(2, ri) * (matchH + matchGap)
+
               return (
-                <div key={round} style={{ width: 220 }}>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--green-accent)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10, textAlign: 'center' }}>{rName}</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {rMatches.map(match => {
-                      const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(match.sets)
-                      return (
-                        <div key={match.id}
-                          onClick={() => openScore(match)}
-                          style={{ background: 'var(--dark)', border: `1px solid ${match.status === 'done' ? 'rgba(82,183,136,0.3)' : 'rgba(64,145,108,0.15)'}`, borderRadius: 10, overflow: 'hidden', cursor: match.homeId && match.awayId ? 'pointer' : 'default', transition: 'border-color 0.15s' }}
-                          onMouseEnter={e => { if (match.homeId && match.awayId) e.currentTarget.style.borderColor = 'var(--gold)' }}
-                          onMouseLeave={e => e.currentTarget.style.borderColor = match.status === 'done' ? 'rgba(82,183,136,0.3)' : 'rgba(64,145,108,0.15)'}
-                        >
-                          {[{ id: match.homeId, score: hw, isWin: match.winnerId === match.homeId }, { id: match.awayId, score: aw, isWin: match.winnerId === match.awayId }].map((side, i) => (
-                            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px', background: side.isWin ? 'rgba(244,160,28,0.08)' : 'transparent', borderBottom: i === 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                              <span style={{ fontSize: 12, fontWeight: side.isWin ? 700 : 400, color: side.isWin ? 'var(--gold)' : side.id ? 'var(--white)' : 'var(--gray-600)' }}>
-                                {side.isWin && '🏆 '}{getTeamName(side.id)}
-                              </span>
-                              {match.status === 'done' && <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: side.isWin ? 'var(--gold)' : 'var(--gray-600)', fontSize: 14 }}>{side.score}</span>}
+                <div key={round} style={{ display: 'flex', alignItems: 'flex-start', marginRight: 0 }}>
+                  <div style={{ width: 220 }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--green-accent)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10, textAlign: 'center', fontWeight: 700 }}>{rName}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      {rMatches.map((match, mi) => {
+                        const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(match.sets)
+                        const marginTop = mi === 0 ? Math.pow(2, ri) * matchH / 2 - matchH / 2 : Math.pow(2, ri + 1) * (matchH + matchGap) / 2 - matchH / 2
+                        return (
+                          <div key={match.id} style={{ marginBottom: matchGap, marginTop: mi === 0 ? `${Math.pow(2, ri) * (matchH/2 + matchGap/2) - matchH/2}px` : `${Math.pow(2, ri + 1) * (matchH + matchGap) - matchH - matchGap}px` }}>
+                            <div
+                              onClick={() => openScore(match)}
+                              style={{
+                                background: 'var(--bg-card)', border: `1.5px solid ${match.status === 'done' ? 'var(--green-accent)' : 'var(--border)'}`,
+                                borderRadius: 10, overflow: 'hidden',
+                                cursor: match.homeId && match.awayId ? 'pointer' : 'default',
+                                transition: 'all 0.15s', boxShadow: 'var(--shadow)',
+                              }}
+                              onMouseEnter={e => { if (match.homeId && match.awayId) { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(196,127,0,0.2)' } }}
+                              onMouseLeave={e => { e.currentTarget.style.borderColor = match.status === 'done' ? 'var(--green-accent)' : 'var(--border)'; e.currentTarget.style.boxShadow = 'var(--shadow)' }}
+                            >
+                              {[
+                                { id: match.homeId, score: hw, isWin: match.winnerId === match.homeId },
+                                { id: match.awayId, score: aw, isWin: match.winnerId === match.awayId }
+                              ].map((side, si) => (
+                                <div key={si} style={{
+                                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                  padding: '9px 12px',
+                                  background: side.isWin ? 'rgba(26,107,58,0.07)' : 'transparent',
+                                  borderBottom: si === 0 ? '1px solid var(--gray-200)' : 'none',
+                                }}>
+                                  <span style={{ fontSize: 12, fontWeight: side.isWin ? 700 : 400, color: side.isWin ? 'var(--green-field)' : side.id ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                                    {side.isWin && '✓ '}{getTeamName(side.id)}
+                                  </span>
+                                  {match.status === 'done' && (
+                                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: side.isWin ? 'var(--green-field)' : 'var(--text-muted)', fontSize: 13, background: side.isWin ? 'rgba(26,107,58,0.1)' : 'var(--gray-100)', padding: '2px 8px', borderRadius: 4 }}>{side.score}</span>
+                                  )}
+                                </div>
+                              ))}
+                              {match.date && <div style={{ padding: '3px 12px', fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', background: 'var(--gray-100)', borderTop: '1px solid var(--border)' }}>{new Date(match.date).toLocaleDateString('id-ID')} {match.time}</div>}
                             </div>
-                          ))}
-                          {match.date && <div style={{ padding: '4px 12px', fontSize: 10, color: 'var(--gray-600)', fontFamily: 'var(--font-mono)', borderTop: '1px solid rgba(255,255,255,0.04)' }}>{new Date(match.date).toLocaleDateString('id-ID')} {match.time}</div>}
-                        </div>
-                      )
-                    })}
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
+                  {/* Connector lines SVG */}
+                  {ri < rounds.length - 1 && (() => {
+                    const nextRound = rounds[ri + 1]
+                    const nextMatches = koMatches.filter(m => m.round === nextRound)
+                    const h = rMatches.length * (matchH + matchGap)
+                    return (
+                      <svg width="40" height={Math.max(h, nextMatches.length * (matchH + matchGap) * 2)} style={{ flexShrink: 0, overflow: 'visible', marginTop: `${Math.pow(2, ri) * (matchH/2 + matchGap/2) - matchH/2}px` }}>
+                        {rMatches.map((match, mi) => {
+                          const yTop = mi * (Math.pow(2, ri + 1) * (matchH + matchGap)) + matchH / 2
+                          const yBottom = yTop + Math.pow(2, ri) * (matchH + matchGap)
+                          const yMid = (yTop + yBottom) / 2
+                          return (
+                            <g key={match.id}>
+                              <line x1="0" y1={yTop} x2="20" y2={yTop} stroke="var(--green-accent)" strokeWidth="1.5" />
+                              <line x1="20" y1={yTop} x2="20" y2={yBottom} stroke="var(--green-accent)" strokeWidth="1.5" />
+                              <line x1="0" y1={yBottom} x2="20" y2={yBottom} stroke="var(--green-accent)" strokeWidth="1.5" />
+                              <line x1="20" y1={yMid} x2="40" y2={yMid} stroke="var(--green-accent)" strokeWidth="1.5" />
+                            </g>
+                          )
+                        })}
+                      </svg>
+                    )
+                  })()}
                 </div>
               )
             })}
