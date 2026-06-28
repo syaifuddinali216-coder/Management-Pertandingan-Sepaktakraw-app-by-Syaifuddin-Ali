@@ -61,14 +61,34 @@ export default function Reports({ eventId: initialEventId }) {
       const XLSX = await import('xlsx')
       const wb = XLSX.utils.book_new()
 
-      // Header style helper (we'll use cell comments for styling hints)
-      const headerStyle = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1A6B3A' } }, alignment: { horizontal: 'center' } }
-      const subHeaderStyle = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '2D8A5F' } }, alignment: { horizontal: 'center' } }
-      const goldStyle = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: 'C47F00' } }, alignment: { horizontal: 'center' } }
+      // Style helpers
+      const RED = 'C0152A', GOLD = 'FFD700', WHITE = 'FFFFFF', DARK = '3D0409'
+      const LIGHT_RED = 'F5C6CB', LIGHT_GOLD = 'FFF9E6', GRAY = 'F2F2F2'
 
-      const styleCell = (ws, ref, style) => {
+      const border = { top: { style: 'thin', color: { rgb: 'CCCCCC' } }, bottom: { style: 'thin', color: { rgb: 'CCCCCC' } }, left: { style: 'thin', color: { rgb: 'CCCCCC' } }, right: { style: 'thin', color: { rgb: 'CCCCCC' } } }
+      const borderBold = { top: { style: 'medium', color: { rgb: RED } }, bottom: { style: 'medium', color: { rgb: RED } }, left: { style: 'medium', color: { rgb: RED } }, right: { style: 'medium', color: { rgb: RED } } }
+
+      const sTitle = { font: { bold: true, sz: 14, color: { rgb: WHITE } }, fill: { fgColor: { rgb: RED }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center' }, border }
+      const sSubtitle = { font: { bold: true, sz: 11, color: { rgb: RED } }, fill: { fgColor: { rgb: LIGHT_RED }, patternType: 'solid' }, alignment: { horizontal: 'center' }, border }
+      const sHeader = { font: { bold: true, sz: 11, color: { rgb: WHITE } }, fill: { fgColor: { rgb: RED }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border }
+      const sSubHeader = { font: { bold: true, sz: 10, color: { rgb: WHITE } }, fill: { fgColor: { rgb: '8B0E1E' }, patternType: 'solid' }, alignment: { horizontal: 'center' }, border }
+      const sData = { font: { sz: 10, color: { rgb: '333333' } }, fill: { fgColor: { rgb: WHITE }, patternType: 'solid' }, alignment: { horizontal: 'left', vertical: 'center', wrapText: true }, border }
+      const sDataCenter = { ...sData, alignment: { horizontal: 'center', vertical: 'center' } }
+      const sDataAlt = { ...sData, fill: { fgColor: { rgb: 'FFF5F5' }, patternType: 'solid' } }
+      const sDataAltCenter = { ...sDataAlt, alignment: { horizontal: 'center', vertical: 'center' } }
+      const sWinner = { font: { bold: true, sz: 10, color: { rgb: DARK } }, fill: { fgColor: { rgb: GOLD }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center' }, border }
+      const sJuara1 = { font: { bold: true, sz: 12, color: { rgb: DARK } }, fill: { fgColor: { rgb: GOLD }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center' }, border: borderBold }
+      const sJuara2 = { font: { bold: true, sz: 11, color: { rgb: WHITE } }, fill: { fgColor: { rgb: '888888' }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center' }, border }
+      const sJuara3 = { font: { bold: true, sz: 11, color: { rgb: WHITE } }, fill: { fgColor: { rgb: 'CD7F32' }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center' }, border }
+      const sPoolHeader = { font: { bold: true, sz: 12, color: { rgb: WHITE } }, fill: { fgColor: { rgb: RED }, patternType: 'solid' }, alignment: { horizontal: 'center' }, border }
+
+      const setStyle = (ws, ref, style) => {
         if (!ws[ref]) ws[ref] = { v: '', t: 's' }
         ws[ref].s = style
+      }
+
+      const applyRowStyle = (ws, row, cols, style) => {
+        cols.forEach(col => setStyle(ws, `${col}${row}`, style))
       }
 
       nomors.forEach((nomor, ni) => {
@@ -83,34 +103,52 @@ export default function Reports({ eventId: initialEventId }) {
 
         // ── SHEET 1: PEMBAGIAN POOL ──────────────────────
         const grpIds = [...new Set(groupMatches.map(m => m.groupId))]
-        const poolRows = [
-          [`PEMBAGIAN POOL — ${nomor.name.toUpperCase()}`],
-          [`Event: ${event.name}`],
-          [],
-        ]
+        const poolAoa = []
+        poolAoa.push([`PEMBAGIAN POOL — ${nomor.name.toUpperCase()}`, '', ''])
+        poolAoa.push([`Event: ${event.name}`, '', ''])
+        poolAoa.push(['', '', ''])
+
         grpIds.forEach(gid => {
           const gName = groupMatches.find(m => m.groupId === gid)?.groupName || gid
           const tids = [...new Set(groupMatches.filter(m => m.groupId === gid).flatMap(m => [m.homeId, m.awayId]))]
-          poolRows.push([gName])
-          poolRows.push(['No', 'Nama Tim / Kontingen', 'Asal Daerah'])
+          poolAoa.push([gName, '', ''])
+          poolAoa.push(['No', 'Nama Tim / Kontingen', 'Asal Daerah'])
           tids.forEach((tid, i) => {
             const t = getTeam(tid)
-            poolRows.push([i + 1, t?.name || '—', t?.origin || '—'])
+            poolAoa.push([i + 1, t?.name || '—', t?.origin || '—'])
           })
-          poolRows.push([])
+          poolAoa.push(['', '', ''])
         })
-        const wsPool = XLSX.utils.aoa_to_sheet(poolRows)
+
+        const wsPool = XLSX.utils.aoa_to_sheet(poolAoa)
         wsPool['!cols'] = [{ wch: 6 }, { wch: 35 }, { wch: 25 }]
-        XLSX.utils.book_append_sheet(wb, wsPool, `${ni + 1}.${nomor.name.slice(0, 15)} Pool`)
+
+        // Style pool sheet
+        let r = 1
+        setStyle(wsPool, `A${r}`, sTitle); setStyle(wsPool, `B${r}`, sTitle); setStyle(wsPool, `C${r}`, sTitle)
+        r++; setStyle(wsPool, `A${r}`, sSubtitle); setStyle(wsPool, `B${r}`, sSubtitle); setStyle(wsPool, `C${r}`, sSubtitle)
+        r++ // blank
+        grpIds.forEach(gid => {
+          r++
+          setStyle(wsPool, `A${r}`, sPoolHeader); setStyle(wsPool, `B${r}`, sPoolHeader); setStyle(wsPool, `C${r}`, sPoolHeader)
+          const tids = [...new Set(groupMatches.filter(m => m.groupId === gid).flatMap(m => [m.homeId, m.awayId]))]
+          r++; applyRowStyle(wsPool, r, ['A','B','C'], sHeader)
+          tids.forEach((_, i) => { r++; applyRowStyle(wsPool, r, ['A','B','C'], i % 2 === 0 ? sData : sDataAlt) })
+          r++
+        })
+
+        wsPool['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } }]
+        XLSX.utils.book_append_sheet(wb, wsPool, `${ni + 1}.${nomor.name.slice(0, 12)} Pool`)
 
         // ── SHEET 2: HASIL PERTANDINGAN ──────────────────
-        const hasilRows = [
-          [`HASIL PERTANDINGAN — ${nomor.name.toUpperCase()}`],
-          [`Event: ${event.name}`],
-          [],
-        ]
+        const hasilAoa = []
+        hasilAoa.push([`HASIL PERTANDINGAN — ${nomor.name.toUpperCase()}`, '', '', '', '', '', '', ''])
+        hasilAoa.push([`Event: ${event.name}`, '', '', '', '', '', '', ''])
+        hasilAoa.push(['', '', '', '', '', '', '', ''])
 
-        // Group results with standings
+        const HCOLS = ['A','B','C','D','E','F','G','H']
+        let hr = 3
+
         grpIds.forEach(gid => {
           const gName = groupMatches.find(m => m.groupId === gid)?.groupName || gid
           const tids = [...new Set(groupMatches.filter(m => m.groupId === gid).flatMap(m => [m.homeId, m.awayId]))]
@@ -118,48 +156,73 @@ export default function Reports({ eventId: initialEventId }) {
           const grpMatches = groupMatches.filter(m => m.groupId === gid)
           const standings = calcStandings(grpTeams, grpMatches)
 
-          hasilRows.push([`KLASEMEN ${gName}`])
-          hasilRows.push(['#', 'Tim', 'P', 'M', 'K', 'Set+', 'Set-', 'Poin'])
-          standings.forEach((r, i) => hasilRows.push([i + 1, r.name, r.P, r.W, r.L, r.SetW, r.SetL, r.Pts]))
-          hasilRows.push([])
+          // Klasemen
+          hasilAoa.push([`KLASEMEN ${gName}`, '', '', '', '', '', '', '']); hr++
+          hasilAoa.push(['#', 'Tim', 'Main', 'Menang', 'Kalah', 'Set +', 'Set -', 'Poin']); hr++
+          standings.forEach((row, i) => {
+            hasilAoa.push([i + 1, row.name, row.P, row.W, row.L, row.SetW, row.SetL, row.Pts]); hr++
+          })
+          hasilAoa.push(['', '', '', '', '', '', '', '']); hr++
 
-          hasilRows.push([`HASIL PERTANDINGAN ${gName}`])
-          hasilRows.push(['Tim A', 'Set 1', 'Set 2', 'Set 3', 'Hasil Set', 'Tim B', 'Pemenang', 'Tanggal'])
+          // Hasil match
+          hasilAoa.push([`HASIL PERTANDINGAN ${gName}`, '', '', '', '', '', '', '']); hr++
+          hasilAoa.push(['Tim A', 'Set 1', 'Set 2', 'Set 3', 'Set', 'Tim B', 'Pemenang', 'Tanggal']); hr++
           grpMatches.filter(m => m.status === 'done').forEach(m => {
             const s = m.sets || []
             const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(s)
             const s1 = s[0]?.home !== undefined ? `${s[0].home||0}-${s[0].away||0}` : '—'
             const s2 = s[1]?.home !== undefined ? `${s[1].home||0}-${s[1].away||0}` : '—'
             const s3 = s[2]?.home !== undefined ? `${s[2].home||0}-${s[2].away||0}` : '—'
-            hasilRows.push([getTeamName(m.homeId), s1, s2, s3, `${hw}-${aw}`, getTeamName(m.awayId), getTeamName(m.winnerId), m.date ? fmtDate(m.date) : '—'])
+            hasilAoa.push([getTeamName(m.homeId), s1, s2, s3, `${hw}-${aw}`, getTeamName(m.awayId), getTeamName(m.winnerId), m.date ? fmtDate(m.date) : '—']); hr++
           })
-          hasilRows.push([])
+          hasilAoa.push(['', '', '', '', '', '', '', '']); hr++
         })
 
-        // Knockout results
         if (koMatches.length > 0) {
-          hasilRows.push(['HASIL KNOCKOUT'])
+          hasilAoa.push(['HASIL KNOCKOUT', '', '', '', '', '', '', '']); hr++
           const rounds = [...new Set(koMatches.map(m => m.round))].sort((a, b) => b - a)
           rounds.forEach(r => {
             const rMatches = koMatches.filter(m => m.round === r)
-            const rName = rMatches[0]?.roundName || `Babak ${r}`
-            hasilRows.push([rName])
-            hasilRows.push(['Tim A', 'Set 1', 'Set 2', 'Set 3', 'Hasil Set', 'Tim B', 'Pemenang', 'Tanggal'])
+            hasilAoa.push([rMatches[0]?.roundName || `Babak ${r}`, '', '', '', '', '', '', '']); hr++
+            hasilAoa.push(['Tim A', 'Set 1', 'Set 2', 'Set 3', 'Set', 'Tim B', 'Pemenang', 'Tanggal']); hr++
             rMatches.forEach(m => {
               const s = m.sets || []
               const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(s)
               const s1 = s[0]?.home !== undefined ? `${s[0].home||0}-${s[0].away||0}` : '—'
               const s2 = s[1]?.home !== undefined ? `${s[1].home||0}-${s[1].away||0}` : '—'
               const s3 = s[2]?.home !== undefined ? `${s[2].home||0}-${s[2].away||0}` : '—'
-              hasilRows.push([getTeamName(m.homeId), s1, s2, s3, `${hw}-${aw}`, getTeamName(m.awayId), getTeamName(m.winnerId), m.date ? fmtDate(m.date) : '—'])
+              hasilAoa.push([getTeamName(m.homeId), s1, s2, s3, `${hw}-${aw}`, getTeamName(m.awayId), getTeamName(m.winnerId), m.date ? fmtDate(m.date) : '—']); hr++
             })
-            hasilRows.push([])
+            hasilAoa.push(['', '', '', '', '', '', '', '']); hr++
           })
         }
 
-        const wsHasil = XLSX.utils.aoa_to_sheet(hasilRows)
-        wsHasil['!cols'] = [{ wch: 28 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 28 }, { wch: 28 }, { wch: 20 }]
-        XLSX.utils.book_append_sheet(wb, wsHasil, `${ni + 1}.${nomor.name.slice(0, 15)} Hasil`)
+        const wsHasil = XLSX.utils.aoa_to_sheet(hasilAoa)
+        wsHasil['!cols'] = [{ wch: 28 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 28 }, { wch: 28 }, { wch: 18 }]
+
+        // Style hasil sheet rows
+        let styleRow = 1
+        applyRowStyle(wsHasil, styleRow, HCOLS, sTitle); wsHasil['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } }]
+        styleRow++; applyRowStyle(wsHasil, styleRow, HCOLS, sSubtitle)
+        hasilAoa.forEach((row, idx) => {
+          const r = idx + 1
+          const v = row[0]?.toString() || ''
+          if (v.startsWith('KLASEMEN') || v.startsWith('HASIL PERTANDINGAN') || v.startsWith('HASIL KNOCKOUT') || v.match(/^(Final|Semifinal|Perempat|Babak)/)) {
+            applyRowStyle(wsHasil, r, HCOLS, sSubHeader)
+          } else if (v === '#' || v === 'Tim A') {
+            applyRowStyle(wsHasil, r, HCOLS, sHeader)
+          } else if (v && v !== '') {
+            const isAlt = idx % 2 === 0
+            HCOLS.forEach((col, ci) => {
+              const isCenter = ci > 0
+              setStyle(wsHasil, `${col}${r}`, isCenter ? (isAlt ? sDataAltCenter : sDataCenter) : (isAlt ? sDataAlt : sData))
+            })
+            // Highlight pemenang column
+            setStyle(wsHasil, `G${r}`, sWinner)
+          }
+        })
+
+        XLSX.utils.book_append_sheet(wb, wsHasil, `${ni + 1}.${nomor.name.slice(0, 12)} Hasil`)
 
         // ── SHEET 3: DAFTAR PEMENANG ─────────────────────
         const koFinal = koMatches.find(m => m.round === 1)
@@ -167,51 +230,59 @@ export default function Reports({ eventId: initialEventId }) {
         if (koFinal) {
           juara1 = getTeamName(koFinal.winnerId)
           juara2 = getTeamName(koFinal.winnerId === koFinal.homeId ? koFinal.awayId : koFinal.homeId)
-          // Semifinal losers = juara 3 bersama
           const semis = koMatches.filter(m => m.round === 2 && m.status === 'done')
           const losers = semis.map(m => getTeamName(m.winnerId === m.homeId ? m.awayId : m.homeId))
-          juara3a = losers[0] || '—'
-          juara3b = losers[1] || '—'
+          juara3a = losers[0] || '—'; juara3b = losers[1] || '—'
         } else {
-          // Fall back to group standings
-          const allGroupTeams = teams
-          const allGroupMatches = groupMatches.filter(m => m.status === 'done')
-          if (allGroupMatches.length > 0) {
-            const s = calcStandings(allGroupTeams, allGroupMatches)
-            juara1 = s[0]?.name || '—'; juara2 = s[1]?.name || '—'
-            juara3a = s[2]?.name || '—'; juara3b = s[3]?.name || '—'
-          }
+          const s = calcStandings(teams, groupMatches.filter(m => m.status === 'done'))
+          juara1 = s[0]?.name || '—'; juara2 = s[1]?.name || '—'
+          juara3a = s[2]?.name || '—'; juara3b = s[3]?.name || '—'
         }
 
-        const pemenangRows = [
-          [`DAFTAR PEMENANG — ${nomor.name.toUpperCase()}`],
-          [`Event: ${event.name}`],
-          [],
-          ['🏆 JUARA I', juara1],
+        const pAoa = [
+          [`DAFTAR PEMENANG — ${nomor.name.toUpperCase()}`, ''],
+          [`Event: ${event.name}`, ''],
+          ['', ''],
+          ['Peringkat', 'Nama Tim'],
+          ['🥇 JUARA I', juara1],
           ['🥈 JUARA II', juara2],
-          ['🥉 JUARA III', juara3a],
-          ['🥉 JUARA III', juara3b],
+          ['🥉 JUARA III (Bersama)', juara3a],
+          ['🥉 JUARA III (Bersama)', juara3b],
         ]
-        const wsPemenang = XLSX.utils.aoa_to_sheet(pemenangRows)
-        wsPemenang['!cols'] = [{ wch: 18 }, { wch: 40 }]
-        XLSX.utils.book_append_sheet(wb, wsPemenang, `${ni + 1}.${nomor.name.slice(0, 15)} Pemenang`)
+        const wsPemenang = XLSX.utils.aoa_to_sheet(pAoa)
+        wsPemenang['!cols'] = [{ wch: 25 }, { wch: 40 }]
+        wsPemenang['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 1 } }]
+        setStyle(wsPemenang, 'A1', sTitle); setStyle(wsPemenang, 'B1', sTitle)
+        setStyle(wsPemenang, 'A2', sSubtitle); setStyle(wsPemenang, 'B2', sSubtitle)
+        setStyle(wsPemenang, 'A4', sHeader); setStyle(wsPemenang, 'B4', sHeader)
+        setStyle(wsPemenang, 'A5', sJuara1); setStyle(wsPemenang, 'B5', sJuara1)
+        setStyle(wsPemenang, 'A6', sJuara2); setStyle(wsPemenang, 'B6', sJuara2)
+        setStyle(wsPemenang, 'A7', sJuara3); setStyle(wsPemenang, 'B7', sJuara3)
+        setStyle(wsPemenang, 'A8', sJuara3); setStyle(wsPemenang, 'B8', sJuara3)
+        XLSX.utils.book_append_sheet(wb, wsPemenang, `${ni + 1}.${nomor.name.slice(0, 12)} Pemenang`)
 
         // ── SHEET 4: DAFTAR PESERTA ──────────────────────
-        const pesertaRows = [
-          [`DAFTAR PESERTA — ${nomor.name.toUpperCase()}`],
-          [`Event: ${event.name}`],
-          [],
+        const pesAoa = [
+          [`DAFTAR PESERTA — ${nomor.name.toUpperCase()}`, '', '', '', '', '', ''],
+          [`Event: ${event.name}`, '', '', '', '', '', ''],
+          ['', '', '', '', '', '', ''],
           ['No', 'Nama Tim', 'Asal Daerah', 'Pelatih', 'Kapten', 'Nama Atlet', 'Manager & Official'],
+          ...teams.map((t, i) => [i + 1, t.name, t.origin || '—', t.coach || '—', t.captain || '—', t.athletes || '—', t.officials || '—'])
         ]
-        teams.forEach((t, i) => {
-          pesertaRows.push([i + 1, t.name, t.origin || '—', t.coach || '—', t.captain || '—', t.athletes || '—', t.officials || '—'])
+        const wsPeserta = XLSX.utils.aoa_to_sheet(pesAoa)
+        wsPeserta['!cols'] = [{ wch: 5 }, { wch: 28 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 38 }, { wch: 28 }]
+        wsPeserta['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }]
+        const PCOLS = ['A','B','C','D','E','F','G']
+        applyRowStyle(wsPeserta, 1, PCOLS, sTitle)
+        applyRowStyle(wsPeserta, 2, PCOLS, sSubtitle)
+        applyRowStyle(wsPeserta, 4, PCOLS, sHeader)
+        teams.forEach((_, i) => {
+          applyRowStyle(wsPeserta, i + 5, PCOLS, i % 2 === 0 ? sData : sDataAlt)
+          setStyle(wsPeserta, `A${i + 5}`, i % 2 === 0 ? sDataCenter : sDataAltCenter)
         })
-        const wsPeserta = XLSX.utils.aoa_to_sheet(pesertaRows)
-        wsPeserta['!cols'] = [{ wch: 5 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 40 }, { wch: 30 }]
-        XLSX.utils.book_append_sheet(wb, wsPeserta, `${ni + 1}.${nomor.name.slice(0, 15)} Peserta`)
+        XLSX.utils.book_append_sheet(wb, wsPeserta, `${ni + 1}.${nomor.name.slice(0, 12)} Peserta`)
       })
 
-      // Write and download
       const filename = `Rekap_${event.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`
       XLSX.writeFile(wb, filename)
       showToast(`✅ Excel berhasil didownload!`)
