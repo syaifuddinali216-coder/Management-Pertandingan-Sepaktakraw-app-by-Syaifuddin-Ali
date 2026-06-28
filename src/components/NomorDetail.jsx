@@ -467,29 +467,29 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, fontSize: 13, color: 'var(--gray-600)' }}>
-        <span style={{ cursor: 'pointer', color: 'var(--green-accent)' }} onClick={onBack}>← {event?.name}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, fontSize: 13, color: 'var(--text-muted)' }}>
+        <span style={{ cursor: 'pointer', color: 'var(--green-field)', fontWeight: 600 }} onClick={onBack}>← {event?.name}</span>
         <span>›</span>
-        <span style={{ color: 'var(--white)' }}>{nomor?.name}</span>
+        <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{nomor?.name}</span>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
         <div>
           <div className="tag-line" style={{ marginBottom: 6 }}>Nomor Pertandingan</div>
-          <h1 style={{ fontSize: 38, color: 'var(--gold)' }}>{nomor?.name?.toUpperCase()}</h1>
+          <h1 style={{ fontSize: 38, color: 'var(--green-field)' }}>{nomor?.name?.toUpperCase()}</h1>
         </div>
         {tab === 'teams' && <button className="btn btn-primary" onClick={openAddTeam}>+ Tambah Tim</button>}
         {tab === 'groups' && <button className="btn btn-primary" onClick={() => setShowGroupSetup(true)}>⚙️ Setup Pool</button>}
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: 4, width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: 'var(--gray-200)', borderRadius: 10, padding: 4, width: 'fit-content' }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             padding: '9px 18px', border: 'none', borderRadius: 8, cursor: 'pointer',
             fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 13, transition: 'all 0.2s',
-            background: tab === t.id ? 'var(--green-mid)' : 'transparent',
-            color: tab === t.id ? 'var(--white)' : 'var(--gray-600)',
+            background: tab === t.id ? 'var(--green-field)' : 'transparent',
+            color: tab === t.id ? '#fff' : 'var(--text-muted)',
           }}>{t.label}</button>
         ))}
       </div>
@@ -535,7 +535,7 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
               const standings = calcStandings(grpTeams, grpMatches)
               return (
                 <div key={grp.id} style={{ marginBottom: 28 }}>
-                  <h2 style={{ fontSize: 24, color: 'var(--green-accent)', marginBottom: 14 }}>{grp.name}</h2>
+                  <div style={{ fontSize: 22, fontFamily: 'var(--font-display)', color: '#FFD700', marginBottom: 14, padding: '10px 18px', background: 'rgba(0,0,0,0.2)', borderRadius: 8, borderLeft: '4px solid #FFD700', display: 'inline-block', letterSpacing: 1 }}>{grp.name}</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
                     <div className="card">
                       <div className="tag-line" style={{ marginBottom: 12, fontSize: 10 }}>Klasemen</div>
@@ -543,15 +543,15 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
                         <thead><tr><th>#</th><th>Tim</th><th>P</th><th>M</th><th>K</th><th>Set+</th><th>Set-</th><th>Pts</th></tr></thead>
                         <tbody>
                           {standings.map((row, i) => (
-                            <tr key={row.team.id}>
-                              <td><span style={{ display: 'inline-block', width: 22, height: 22, lineHeight: '22px', textAlign: 'center', borderRadius: 4, fontSize: 11, fontWeight: 700, background: i < 2 ? 'rgba(244,160,28,0.15)' : 'transparent', color: i < 2 ? 'var(--gold)' : 'var(--gray-600)' }}>{i + 1}</span></td>
-                              <td style={{ fontWeight: i < 2 ? 600 : 400, color: i < 2 ? 'var(--white)' : 'var(--gray-300)' }}>{row.team.name}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{row.P}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--green-accent)' }}>{row.W}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--red-card)' }}>{row.L}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{row.SetW}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{row.SetL}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--gold)' }}>{row.Pts}</td>
+                            <tr key={row.team.id} style={{ background: i < 2 ? 'rgba(255,215,0,0.08)' : 'transparent' }}>
+                              <td><span style={{ display: 'inline-block', width: 22, height: 22, lineHeight: '22px', textAlign: 'center', borderRadius: 4, fontSize: 11, fontWeight: 700, background: i < 2 ? '#FFD700' : 'rgba(255,255,255,0.15)', color: i < 2 ? '#5a0812' : 'rgba(255,255,255,0.6)' }}>{i + 1}</span></td>
+                              <td style={{ fontWeight: i < 2 ? 700 : 500, color: i < 2 ? '#FFD700' : '#fff' }}>{row.team.name}</td>
+                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>{row.P}</td>
+                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#4ade80', fontWeight: 600 }}>{row.W}</td>
+                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#ffaaaa' }}>{row.L}</td>
+                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>{row.SetW}</td>
+                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>{row.SetL}</td>
+                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700, color: '#FFD700' }}>{row.Pts}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -563,12 +563,12 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
                         {grpMatches.map(match => {
                           const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(match.sets || [])
                           return (
-                            <div key={match.id} style={{ display: 'flex', alignItems: 'center', padding: '9px 11px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: `1px solid ${match.status === 'done' ? 'rgba(82,183,136,0.2)' : 'rgba(255,255,255,0.06)'}`, gap: 6 }}>
-                              <div style={{ flex: 1, fontSize: 12, fontWeight: 500 }}>{getTeamName(match.homeId)}</div>
+                            <div key={match.id} style={{ display: 'flex', alignItems: 'center', padding: '9px 11px', borderRadius: 8, background: match.status === 'done' ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.05)', border: `1.5px solid ${match.status === 'done' ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.2)'}`, gap: 6 }}>
+                              <div style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#fff' }}>{getTeamName(match.homeId)}</div>
                               <div style={{ textAlign: 'center', minWidth: 60 }}>
-                                {match.status === 'done' ? <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--gold)', fontSize: 14 }}>{hw} — {aw}</span> : <span style={{ color: 'var(--gray-600)', fontSize: 11 }}>vs</span>}
+                                {match.status === 'done' ? <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#FFD700', fontSize: 14 }}>{hw} — {aw}</span> : <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>vs</span>}
                               </div>
-                              <div style={{ flex: 1, fontSize: 12, fontWeight: 500, textAlign: 'right' }}>{getTeamName(match.awayId)}</div>
+                              <div style={{ flex: 1, fontSize: 12, fontWeight: 600, textAlign: 'right', color: '#fff' }}>{getTeamName(match.awayId)}</div>
                               <button className="btn btn-ghost" style={{ padding: '3px 9px', fontSize: 11, marginLeft: 4 }} onClick={() => openScore(match)}>{match.status === 'done' ? 'Edit' : 'Input'}</button>
                             </div>
                           )
