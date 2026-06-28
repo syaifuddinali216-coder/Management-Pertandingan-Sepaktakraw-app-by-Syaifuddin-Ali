@@ -200,19 +200,19 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
         const semis = koMatches.filter(m => m.round === 2 && m.status === 'done')
         const juara3 = semis.map(m => m.winnerId === m.homeId ? m.awayId : m.homeId)
         return (
-          <div style={{ background: 'linear-gradient(135deg, #fffbf0, #fff8e0)', border: '2px solid var(--gold)', borderRadius: 14, padding: '20px 24px', marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--gold)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14, fontWeight: 700 }}>🏆 Hasil Akhir Turnamen</div>
+          <div style={{ background: 'linear-gradient(135deg, #8b0e1e, #c0152a)', border: '2px solid #FFD700', borderRadius: 14, padding: '20px 24px', marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: '#FFD700', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14, fontWeight: 700 }}>🏆 Hasil Akhir Turnamen</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
               {[
-                { medal: '🥇', label: 'JUARA I', id: champion, bg: '#fffbf0', border: '#f4a01c' },
-                { medal: '🥈', label: 'JUARA II', id: runnerUp, bg: '#f8f8f8', border: '#aaaaaa' },
-                ...juara3.map(id => ({ medal: '🥉', label: 'JUARA III', id, bg: '#fff8f0', border: '#cd7f32' })),
+                { medal: '🥇', label: 'JUARA I', id: champion, bg: '#FFD700', border: '#FFD700', textColor: '#5a0812' },
+                { medal: '🥈', label: 'JUARA II', id: runnerUp, bg: '#FFD700', border: '#FFD700', textColor: '#5a0812' },
+                ...juara3.map(id => ({ medal: '🥉', label: 'JUARA III', id, bg: '#FFD700', border: '#FFD700', textColor: '#5a0812' })),
               ].filter(j => j.id).map((j, i) => (
-                <div key={i} style={{ background: j.bg, border: `1.5px solid ${j.border}`, borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div key={i} style={{ background: j.bg, border: `2px solid ${j.border}`, borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontSize: 24 }}>{j.medal}</span>
                   <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#888', fontFamily: 'var(--font-mono)', letterSpacing: 1 }}>{j.label}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>{getTeamName(j.id)}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: j.textColor, fontFamily: 'var(--font-mono)', letterSpacing: 1, opacity: 0.7 }}>{j.label}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: j.textColor, marginTop: 2 }}>{getTeamName(j.id)}</div>
                   </div>
                 </div>
               ))}
@@ -619,13 +619,25 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
         <div className="modal-overlay" onClick={() => setShowGroupSetup(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>SETUP POOL</h2>
-            <p style={{ color: 'var(--gray-600)', marginBottom: 16, fontSize: 14 }}>{teams.length} tim akan dibagi ke dalam pool.</p>
-            <div className="form-group"><label>Jumlah Pool</label>
+            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 20, fontSize: 14 }}>{teams.length} tim akan dibagi ke dalam pool.</p>
+            <div className="form-group">
+              <label>Jumlah Pool (1 - 16)</label>
               <select value={numGroups} onChange={e => setNumGroups(parseInt(e.target.value))}>
-                {[2, 3, 4].filter(n => n <= teams.length).map(n => <option key={n} value={n}>{n} Pool</option>)}
+                {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+                  .filter(n => n <= teams.length)
+                  .map(n => <option key={n} value={n}>{n} Pool</option>)}
               </select>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>
+                Pilih 1 sampai 16 pool (maks sesuai jumlah tim)
+              </p>
             </div>
-            <p style={{ fontSize: 12, color: 'var(--gray-600)', marginBottom: 16 }}>~{Math.ceil(teams.length / numGroups)} tim per pool</p>
+            <div style={{ padding: '12px 16px', background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 8, marginBottom: 20 }}>
+              <div style={{ fontSize: 13, color: '#FFD700', fontWeight: 600, marginBottom: 4 }}>📊 Perkiraan pembagian:</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>
+                ~{Math.floor(teams.length / numGroups)} tim per pool
+                {teams.length % numGroups > 0 && `, ${teams.length % numGroups} pool berisi ${Math.floor(teams.length / numGroups) + 1} tim`}
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={setupGroups}>Buat Pool</button>
               <button className="btn btn-ghost" onClick={() => setShowGroupSetup(false)}>Batal</button>
