@@ -5,6 +5,7 @@ import { useNav } from '../pages/MainApp.jsx'
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '⚡' },
   { id: 'events', label: 'Daftar Event', icon: '📋' },
+  { id: 'schedule', label: 'Jadwal', icon: '📅' },
   { id: 'reports', label: 'Rekap Hasil', icon: '📊' },
 ]
 
