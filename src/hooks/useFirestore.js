@@ -77,6 +77,77 @@ export function useTeams(eventId, nomorId) {
   return { teams, loading, addTeam, updateTeam, deleteTeam }
 }
 
+// ── Jadwal Pertandingan (per event) ───────────────────────
+export function useSchedule(eventId) {
+  const { user } = useApp()
+  const [schedule, setSchedule] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user || !eventId) return
+    const ref = doc(db, 'users', user.uid, 'events', eventId, 'meta', 'schedule')
+    const unsub = onSnapshot(ref, snap => {
+      setSchedule(snap.exists() ? snap.data() : null)
+      setLoading(false)
+    })
+    return unsub
+  }, [user, eventId])
+
+  const saveSchedule = (data) => setDoc(doc(db, 'users', user.uid, 'events', eventId, 'meta', 'schedule'), data)
+
+  return { schedule, loading, saveSchedule }
+}
+
+// ── Slot jadwal (assignment match ke waktu+lapangan) ──────
+export function useScheduleSlots(eventId) {
+  const { user } = useApp()
+  const [slots, setSlots] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user || !eventId) return
+    const q = query(collection(db, 'users', user.uid, 'events', eventId, 'scheduleSlots'), orderBy('order', 'asc'))
+    const unsub = onSnapshot(q, snap => {
+      setSlots(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      setLoading(false)
+    })
+    return unsub
+  }, [user, eventId])
+
+  const base = () => collection(db, 'users', user.uid, 'events', eventId, 'scheduleSlots')
+  const addSlot = (data) => addDoc(base(), data)
+  const updateSlot = (id, data) => updateDoc(doc(db, 'users', user.uid, 'events', eventId, 'scheduleSlots', id), data)
+  const deleteSlot = (id) => deleteDoc(doc(db, 'users', user.uid, 'events', eventId, 'scheduleSlots', id))
+  const setSlotsBatch = async (slotsArray) => {
+    // Delete all existing then add new
+    for (const s of slots) await deleteDoc(doc(db, 'users', user.uid, 'events', eventId, 'scheduleSlots', s.id))
+    for (const s of slotsArray) await addDoc(base(), s)
+  }
+
+  return { slots, loading, addSlot, updateSlot, deleteSlot, setSlotsBatch }
+}
+
+// ── Court assignment per hari (nomor mana main di court mana) ──
+export function useCourtAssignments(eventId) {
+  const { user } = useApp()
+  const [assignments, setAssignments] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user || !eventId) return
+    const ref = doc(db, 'users', user.uid, 'events', eventId, 'meta', 'courtAssignments')
+    const unsub = onSnapshot(ref, snap => {
+      setAssignments(snap.exists() ? snap.data() : {})
+      setLoading(false)
+    })
+    return unsub
+  }, [user, eventId])
+
+  const saveAssignments = (data) => setDoc(doc(db, 'users', user.uid, 'events', eventId, 'meta', 'courtAssignments'), data)
+
+  return { assignments, loading, saveAssignments }
+}
+
 // ── Match dalam 1 nomor ───────────────────────────────────
 export function useMatches(eventId, nomorId) {
   const { user } = useApp()
