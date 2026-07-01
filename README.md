@@ -7,9 +7,9 @@ Aplikasi manajemen turnamen sepak takraw berbasis web dengan:
 - ✅ Multi-event & multi-nomor pertandingan
 - ✅ Input skor per set (maks 15, deuce 16-17)
 - ✅ Nomor: Regu Putra/Putri, Double Putra/Putri, Quadrant Putra/Putri
-- ✅ Laporan PDF lengkap (18 bagian sesuai format resmi)
+- ✅ Laporan Otomatis
 
----   
+---    
 
 ## 🔧 LANGKAH 1: Setup Firebase (WAJIB)
 
