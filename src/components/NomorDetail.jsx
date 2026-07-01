@@ -67,17 +67,63 @@ function SetScoreInput({ sets, onChange, homeLabel, awayLabel }) {
 
 function calcStandings(teams, matches) {
   const tbl = {}
-  teams.forEach(t => tbl[t.id] = { team: t, P: 0, W: 0, L: 0, SetW: 0, SetL: 0, Pts: 0 })
+  teams.forEach(t => tbl[t.id] = { team: t, P: 0, W: 0, L: 0, SetW: 0, SetL: 0, PtsScored: 0, PtsConceded: 0, Pts: 0 })
+
   matches.filter(m => m.status === 'done').forEach(m => {
     const h = tbl[m.homeId], a = tbl[m.awayId]
     if (!h || !a) return
     const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(m.sets)
-    h.P++; a.P++; h.SetW += hw; h.SetL += aw; a.SetW += aw; a.SetL += hw
+
+    // Hitung total poin per set
+    let hPts = 0, aPts = 0
+    ;(m.sets || []).forEach(s => {
+      if (s?.home !== undefined && s?.away !== undefined && (s.home !== '' || s.away !== '')) {
+        hPts += parseInt(s.home) || 0
+        aPts += parseInt(s.away) || 0
+      }
+    })
+
+    h.P++; a.P++
+    h.SetW += hw; h.SetL += aw
+    a.SetW += aw; a.SetL += hw
+    h.PtsScored += hPts; h.PtsConceded += aPts
+    a.PtsScored += aPts; a.PtsConceded += hPts
+
     if (hw > aw) { h.W++; h.Pts += 3; a.L++ }
     else if (aw > hw) { a.W++; a.Pts += 3; h.L++ }
     else { h.Pts++; a.Pts++ }
   })
-  return Object.values(tbl).sort((a, b) => b.Pts - a.Pts || (b.SetW - b.SetL) - (a.SetW - a.SetL))
+
+  const rows = Object.values(tbl)
+
+  // Head to head: hasil langsung antar 2 tim
+  const getH2H = (idA, idB) => {
+    const m = matches.filter(m => m.status === 'done').find(m =>
+      (m.homeId === idA && m.awayId === idB) || (m.homeId === idB && m.awayId === idA)
+    )
+    if (!m) return 0
+    const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(m.sets)
+    if (m.homeId === idA) return hw > aw ? 1 : hw < aw ? -1 : 0
+    return aw > hw ? 1 : aw < hw ? -1 : 0
+  }
+
+  return rows.sort((a, b) => {
+    // 1. Poin kemenangan
+    if (b.Pts !== a.Pts) return b.Pts - a.Pts
+    // 2. Selisih set (menang 2-0 lebih baik dari 2-1)
+    const aSetDiff = a.SetW - a.SetL
+    const bSetDiff = b.SetW - b.SetL
+    if (bSetDiff !== aSetDiff) return bSetDiff - aSetDiff
+    // 3. Selisih poin
+    const aPtsDiff = a.PtsScored - a.PtsConceded
+    const bPtsDiff = b.PtsScored - b.PtsConceded
+    if (bPtsDiff !== aPtsDiff) return bPtsDiff - aPtsDiff
+    // 4. Head to head
+    const h2h = getH2H(b.team.id, a.team.id)
+    if (h2h !== 0) return h2h
+    // 5. Total poin dicetak
+    return b.PtsScored - a.PtsScored
+  })
 }
 
 // ── KNOCKOUT COMPONENT ─────────────────────────────────────
@@ -608,20 +654,49 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
                     <div className="card">
                       <div className="tag-line" style={{ marginBottom: 12, fontSize: 10 }}>Klasemen</div>
                       <table>
-                        <thead><tr><th>#</th><th>Tim</th><th>P</th><th>M</th><th>K</th><th>Set+</th><th>Set-</th><th>Pts</th></tr></thead>
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Tim</th>
+                            <th title="Main">P</th>
+                            <th title="Menang">M</th>
+                            <th title="Kalah">K</th>
+                            <th title="Set Menang">S+</th>
+                            <th title="Set Kalah">S-</th>
+                            <th title="Selisih Set">ΔS</th>
+                            <th title="Poin Dicetak">P+</th>
+                            <th title="Poin Kemasukan">P-</th>
+                            <th title="Selisih Poin">ΔP</th>
+                            <th title="Poin Kemenangan">Pts</th>
+                          </tr>
+                        </thead>
                         <tbody>
-                          {standings.map((row, i) => (
-                            <tr key={row.team.id} style={{ background: i < 2 ? 'rgba(255,215,0,0.08)' : 'transparent' }}>
-                              <td><span style={{ display: 'inline-block', width: 22, height: 22, lineHeight: '22px', textAlign: 'center', borderRadius: 4, fontSize: 11, fontWeight: 700, background: i < 2 ? '#FFD700' : 'rgba(255,255,255,0.15)', color: i < 2 ? '#5a0812' : 'rgba(255,255,255,0.6)' }}>{i + 1}</span></td>
-                              <td style={{ fontWeight: i < 2 ? 700 : 500, color: i < 2 ? '#FFD700' : '#fff' }}>{row.team.name}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>{row.P}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#4ade80', fontWeight: 600 }}>{row.W}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#ffaaaa' }}>{row.L}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>{row.SetW}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>{row.SetL}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700, color: '#FFD700' }}>{row.Pts}</td>
-                            </tr>
-                          ))}
+                          {standings.map((row, i) => {
+                            const setDiff = row.SetW - row.SetL
+                            const ptsDiff = row.PtsScored - row.PtsConceded
+                            return (
+                              <tr key={row.team.id} style={{ background: i < 2 ? 'rgba(255,215,0,0.08)' : 'transparent' }}>
+                                <td>
+                                  <span style={{ display: 'inline-block', width: 22, height: 22, lineHeight: '22px', textAlign: 'center', borderRadius: 4, fontSize: 11, fontWeight: 700, background: i < 2 ? '#FFD700' : 'rgba(255,255,255,0.15)', color: i < 2 ? '#5a0812' : 'rgba(255,255,255,0.6)' }}>{i + 1}</span>
+                                </td>
+                                <td style={{ fontWeight: i < 2 ? 700 : 500, color: i < 2 ? '#FFD700' : '#fff', whiteSpace: 'nowrap' }}>{row.team.name}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>{row.P}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#4ade80', fontWeight: 600, textAlign: 'center' }}>{row.W}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#ffaaaa', textAlign: 'center' }}>{row.L}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>{row.SetW}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>{row.SetL}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: setDiff > 0 ? '#4ade80' : setDiff < 0 ? '#ffaaaa' : 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
+                                  {setDiff > 0 ? `+${setDiff}` : setDiff}
+                                </td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>{row.PtsScored}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>{row.PtsConceded}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: ptsDiff > 0 ? '#4ade80' : ptsDiff < 0 ? '#ffaaaa' : 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
+                                  {ptsDiff > 0 ? `+${ptsDiff}` : ptsDiff}
+                                </td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700, color: '#FFD700', textAlign: 'center' }}>{row.Pts}</td>
+                              </tr>
+                            )
+                          })}
                         </tbody>
                       </table>
                     </div>
