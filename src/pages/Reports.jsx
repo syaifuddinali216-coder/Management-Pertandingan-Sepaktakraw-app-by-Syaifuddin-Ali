@@ -15,17 +15,29 @@ function calcSetResult(sets) {
 
 function calcStandings(teams, matches) {
   const tbl = {}
-  teams.forEach(t => tbl[t.id] = { name: t.name, origin: t.origin || '', P: 0, W: 0, L: 0, SetW: 0, SetL: 0, Pts: 0 })
+  teams.forEach(t => tbl[t.id] = { name: t.name, origin: t.origin || '', P: 0, W: 0, L: 0, SetW: 0, SetL: 0, PtsScored: 0, PtsConceded: 0, Pts: 0 })
   matches.filter(m => m.status === 'done').forEach(m => {
     const h = tbl[m.homeId], a = tbl[m.awayId]
     if (!h || !a) return
     const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(m.sets)
+    let hPts = 0, aPts = 0
+    ;(m.sets || []).forEach(s => {
+      if (s?.home !== undefined && s?.away !== undefined) {
+        hPts += parseInt(s.home) || 0; aPts += parseInt(s.away) || 0
+      }
+    })
     h.P++; a.P++; h.SetW += hw; h.SetL += aw; a.SetW += aw; a.SetL += hw
+    h.PtsScored += hPts; h.PtsConceded += aPts; a.PtsScored += aPts; a.PtsConceded += hPts
     if (hw > aw) { h.W++; h.Pts += 3; a.L++ }
     else if (aw > hw) { a.W++; a.Pts += 3; h.L++ }
     else { h.Pts++; a.Pts++ }
   })
-  return Object.values(tbl).sort((a, b) => b.Pts - a.Pts || (b.SetW - b.SetL) - (a.SetW - a.SetL))
+  return Object.values(tbl).sort((a, b) => {
+    if (b.Pts !== a.Pts) return b.Pts - a.Pts
+    const aSD = a.SetW - a.SetL, bSD = b.SetW - b.SetL
+    if (bSD !== aSD) return bSD - aSD
+    return (b.PtsScored - b.PtsConceded) - (a.PtsScored - a.PtsConceded)
+  })
 }
 
 function NomorDataLoader({ eventId, nomor, onData }) {
