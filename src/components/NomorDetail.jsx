@@ -392,7 +392,7 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
   const [tab, setTab] = useState('teams')
   const [showTeamModal, setShowTeamModal] = useState(false)
   const [editTeamId, setEditTeamId] = useState(null)
-  const [teamForm, setTeamForm] = useState({ name: '', origin: '', coach: '', captain: '', athletes: '', officials: '' })
+  const [teamForm, setTeamForm] = useState({ name: '', origin: '', coach: '', captain: '', athletes: '', officials: '', code: '' })
   const [savingTeam, setSavingTeam] = useState(false)
   const [groups, setGroups] = useState([])
   const [showGroupSetup, setShowGroupSetup] = useState(false)
@@ -406,8 +406,8 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
 
   const getTeamName = (id) => teams.find(t => t.id === id)?.name || 'TBD'
 
-  const openAddTeam = () => { setTeamForm({ name: '', origin: '', coach: '', captain: '', athletes: '', officials: '' }); setEditTeamId(null); setShowTeamModal(true) }
-  const openEditTeam = (t) => { setTeamForm({ name: t.name, origin: t.origin || '', coach: t.coach || '', captain: t.captain || '', athletes: t.athletes || '', officials: t.officials || '' }); setEditTeamId(t.id); setShowTeamModal(true) }
+  const openAddTeam = () => { setTeamForm({ name: '', origin: '', coach: '', captain: '', athletes: '', officials: '', code: '' }); setEditTeamId(null); setShowTeamModal(true) }
+  const openEditTeam = (t) => { setTeamForm({ name: t.name, origin: t.origin || '', coach: t.coach || '', captain: t.captain || '', athletes: t.athletes || '', officials: t.officials || '', code: t.code || '' }); setEditTeamId(t.id); setShowTeamModal(true) }
 
   const saveTeam = async () => {
     if (!teamForm.name.trim()) return showToast('Nama tim wajib!')
@@ -502,15 +502,21 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
           <div className="card">
             <div style={{ marginBottom: 14, fontSize: 12, color: 'var(--gray-600)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: 1 }}>{teams.length} kontingen terdaftar</div>
             <table>
-              <thead><tr><th>#</th><th>Nama Tim</th><th>Asal</th><th>Pelatih</th><th>Kapten</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>#</th><th>Kode</th><th>Nama Tim</th><th>Asal</th><th>Pelatih</th><th>Kapten</th><th>Aksi</th></tr></thead>
               <tbody>
                 {teams.map((t, i) => (
                   <tr key={t.id}>
-                    <td><span style={{ fontFamily: 'var(--font-mono)', color: 'var(--green-accent)', fontWeight: 700 }}>{String(i + 1).padStart(2, '0')}</span></td>
-                    <td style={{ fontWeight: 600 }}>{t.name}</td>
-                    <td style={{ color: 'var(--gray-300)' }}>{t.origin || '—'}</td>
-                    <td style={{ color: 'var(--gray-300)' }}>{t.coach || '—'}</td>
-                    <td style={{ color: 'var(--gray-300)' }}>{t.captain || '—'}</td>
+                    <td><span style={{ fontFamily: 'var(--font-mono)', color: '#FFD700', fontWeight: 700 }}>{String(i + 1).padStart(2, '0')}</span></td>
+                    <td>
+                      {t.code
+                        ? <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, background: 'rgba(255,215,0,0.15)', color: '#FFD700', padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(255,215,0,0.4)', fontSize: 13 }}>{t.code}</span>
+                        : <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12 }}>—</span>
+                      }
+                    </td>
+                    <td style={{ fontWeight: 600, color: '#fff' }}>{t.name}</td>
+                    <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.origin || '—'}</td>
+                    <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.coach || '—'}</td>
+                    <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.captain || '—'}</td>
                     <td><div style={{ display: 'flex', gap: 8 }}>
                       <button className="btn btn-ghost" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => openEditTeam(t)}>Edit</button>
                       <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => removeTeam(t.id)}>Hapus</button>
@@ -596,6 +602,23 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
         <div className="modal-overlay" onClick={() => setShowTeamModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 560 }}>
             <h2>{editTeamId ? 'EDIT TIM' : 'TAMBAH TIM'}</h2>
+
+            {/* Kode Tim - prominent at top */}
+            <div style={{ background: 'rgba(255,215,0,0.1)', border: '1.5px solid rgba(255,215,0,0.4)', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label style={{ color: '#FFD700' }}>🏷️ Kode Tim (untuk integrasi jadwal)</label>
+                <input
+                  value={teamForm.code || ''}
+                  onChange={e => setTeamForm({ ...teamForm, code: e.target.value.toUpperCase() })}
+                  placeholder="Contoh: A1, B2, C3 ..."
+                  style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 16, letterSpacing: 2 }}
+                />
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>
+                  Kode ini harus sama dengan kode di jadwal pertandingan. Jadwal akan otomatis tampilkan nama tim ini.
+                </p>
+              </div>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div className="form-group" style={{ marginBottom: 0 }}><label>Nama Tim *</label><input value={teamForm.name} onChange={e => setTeamForm({ ...teamForm, name: e.target.value })} placeholder="Nama tim" autoFocus /></div>
               <div className="form-group" style={{ marginBottom: 0 }}><label>Asal Daerah</label><input value={teamForm.origin} onChange={e => setTeamForm({ ...teamForm, origin: e.target.value })} placeholder="Provinsi/Kabupaten" /></div>
