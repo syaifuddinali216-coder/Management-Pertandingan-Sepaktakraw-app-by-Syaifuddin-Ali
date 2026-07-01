@@ -425,19 +425,81 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
 
   const setupGroups = async () => {
     if (teams.length < 2) return showToast('Minimal 2 tim!')
-    const shuffled = [...teams].sort(() => Math.random() - 0.5)
-    const grps = Array.from({ length: numGroups }, (_, i) => ({ id: `g${i}`, name: `Pool ${String.fromCharCode(65 + i)}`, teamIds: [] }))
-    shuffled.forEach((t, i) => grps[i % numGroups].teamIds.push(t.id))
-    setGroups(grps)
-    const existingGroupMatches = matches.filter(m => m.phase === 'group')
-    for (const m of existingGroupMatches) await deleteMatch(m.id)
-    for (const grp of grps) {
-      const tids = grp.teamIds
-      for (let i = 0; i < tids.length; i++)
-        for (let j = i + 1; j < tids.length; j++)
-          await addMatch({ groupId: grp.id, groupName: grp.name, homeId: tids[i], awayId: tids[j], sets: [{}, {}, {}], status: 'pending', phase: 'group', winnerId: null, date: '', time: '' })
+
+    // Cek apakah ada tim dengan kode yang mengandung huruf pool (A, B, C, ...)
+    // Contoh: "RPA A1" → pool A, "RPA B2" → pool B, "C3" → pool C
+    const extractPoolLetter = (code) => {
+      if (!code) return null
+      // Cari huruf kapital tunggal yang diikuti angka, contoh: A1, B2, C3
+      // atau format seperti "RPA A1" → ambil huruf sebelum angka terakhir
+      const match = code.toUpperCase().match(/\b([A-Z])\d+$/)
+      if (match) return match[1]
+      // Format alternatif: huruf kapital yang berdiri sendiri sebelum angka
+      const match2 = code.toUpperCase().match(/([A-Z])\s*\d+/)
+      if (match2) return match2[1]
+      return null
     }
-    setShowGroupSetup(false); showToast(`${numGroups} pool berhasil dibuat!`); setTab('groups')
+
+    const teamsWithPoolCode = teams.filter(t => extractPoolLetter(t.code))
+
+    if (teamsWithPoolCode.length >= 2) {
+      // Mode otomatis berdasarkan kode
+      const poolMap = {} // { 'A': [team, team], 'B': [team] }
+      teams.forEach(t => {
+        const letter = extractPoolLetter(t.code)
+        if (letter) {
+          if (!poolMap[letter]) poolMap[letter] = []
+          poolMap[letter].push(t)
+        }
+      })
+
+      const poolLetters = Object.keys(poolMap).sort()
+      if (poolLetters.length === 0) return showToast('Tidak ada kode pool yang valid!')
+
+      const grps = poolLetters.map((letter, i) => ({
+        id: `g${i}`,
+        name: `Pool ${letter}`,
+        teamIds: poolMap[letter].map(t => t.id),
+      }))
+      setGroups(grps)
+
+      // Hapus match grup lama
+      const existingGroupMatches = matches.filter(m => m.phase === 'group')
+      for (const m of existingGroupMatches) await deleteMatch(m.id)
+
+      // Buat match baru per pool
+      for (const grp of grps) {
+        const tids = grp.teamIds
+        for (let i = 0; i < tids.length; i++)
+          for (let j = i + 1; j < tids.length; j++)
+            await addMatch({ groupId: grp.id, groupName: grp.name, homeId: tids[i], awayId: tids[j], sets: [{}, {}, {}], status: 'pending', phase: 'group', winnerId: null, date: '', time: '' })
+      }
+
+      setShowGroupSetup(false)
+      showToast(`✅ ${poolLetters.length} pool dibuat otomatis dari kode tim!`)
+      setTab('groups')
+
+    } else {
+      // Mode manual / acak seperti sebelumnya
+      const shuffled = [...teams].sort(() => Math.random() - 0.5)
+      const grps = Array.from({ length: numGroups }, (_, i) => ({
+        id: `g${i}`, name: `Pool ${String.fromCharCode(65 + i)}`, teamIds: []
+      }))
+      shuffled.forEach((t, i) => grps[i % numGroups].teamIds.push(t.id))
+      setGroups(grps)
+
+      const existingGroupMatches = matches.filter(m => m.phase === 'group')
+      for (const m of existingGroupMatches) await deleteMatch(m.id)
+      for (const grp of grps) {
+        const tids = grp.teamIds
+        for (let i = 0; i < tids.length; i++)
+          for (let j = i + 1; j < tids.length; j++)
+            await addMatch({ groupId: grp.id, groupName: grp.name, homeId: tids[i], awayId: tids[j], sets: [{}, {}, {}], status: 'pending', phase: 'group', winnerId: null, date: '', time: '' })
+      }
+      setShowGroupSetup(false)
+      showToast(`${numGroups} pool berhasil dibuat!`)
+      setTab('groups')
+    }
   }
 
   const openScore = (match) => {
@@ -638,36 +700,81 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
       )}
 
       {/* GROUP SETUP MODAL */}
-      {showGroupSetup && (
-        <div className="modal-overlay" onClick={() => setShowGroupSetup(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>SETUP POOL</h2>
-            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 20, fontSize: 14 }}>{teams.length} tim akan dibagi ke dalam pool.</p>
-            <div className="form-group">
-              <label>Jumlah Pool (1 - 16)</label>
-              <select value={numGroups} onChange={e => setNumGroups(parseInt(e.target.value))}>
-                {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-                  .filter(n => n <= teams.length)
-                  .map(n => <option key={n} value={n}>{n} Pool</option>)}
-              </select>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>
-                Pilih 1 sampai 16 pool (maks sesuai jumlah tim)
-              </p>
-            </div>
-            <div style={{ padding: '12px 16px', background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 8, marginBottom: 20 }}>
-              <div style={{ fontSize: 13, color: '#FFD700', fontWeight: 600, marginBottom: 4 }}>📊 Perkiraan pembagian:</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>
-                ~{Math.floor(teams.length / numGroups)} tim per pool
-                {teams.length % numGroups > 0 && `, ${teams.length % numGroups} pool berisi ${Math.floor(teams.length / numGroups) + 1} tim`}
+      {showGroupSetup && (() => {
+        const extractPoolLetter = (code) => {
+          if (!code) return null
+          const match = code.toUpperCase().match(/\b([A-Z])\d+$/)
+          if (match) return match[1]
+          const match2 = code.toUpperCase().match(/([A-Z])\s*\d+/)
+          if (match2) return match2[1]
+          return null
+        }
+        const teamsWithCode = teams.filter(t => extractPoolLetter(t.code))
+        const poolMap = {}
+        teamsWithCode.forEach(t => {
+          const l = extractPoolLetter(t.code)
+          if (!poolMap[l]) poolMap[l] = []
+          poolMap[l].push(t)
+        })
+        const poolLetters = Object.keys(poolMap).sort()
+        const autoMode = teamsWithCode.length >= 2
+
+        return (
+          <div className="modal-overlay" onClick={() => setShowGroupSetup(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <h2>SETUP POOL</h2>
+
+              {autoMode ? (
+                <div>
+                  <div style={{ background: 'rgba(74,222,128,0.1)', border: '1.5px solid rgba(74,222,128,0.4)', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
+                    <div style={{ fontSize: 13, color: '#4ade80', fontWeight: 700, marginBottom: 8 }}>✅ Mode Otomatis Terdeteksi!</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 10 }}>
+                      Sistem mendeteksi kode pool dari {teamsWithCode.length} tim. Pool akan dibuat otomatis:
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {poolLetters.map(letter => (
+                        <div key={letter} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(255,215,0,0.1)', borderRadius: 8 }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#FFD700', minWidth: 60 }}>Pool {letter}</span>
+                          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{poolMap[letter].map(t => t.code).join(', ')}</span>
+                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginLeft: 'auto' }}>{poolMap[letter].length} tim</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>
+                    Tim yang tidak punya kode pool tidak akan masuk ke pool manapun.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ background: 'rgba(255,165,0,0.1)', border: '1px solid rgba(255,165,0,0.3)', borderRadius: 8, padding: '12px 14px', marginBottom: 16 }}>
+                    <div style={{ fontSize: 13, color: 'orange', fontWeight: 600, marginBottom: 4 }}>⚠️ Mode Manual</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
+                      Tim tidak memiliki kode pool (A1, B2, C3, dst). Tim akan dibagi secara acak. Untuk pembagian otomatis, tambahkan kode pada setiap tim di tab Tim & Atlet.
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Jumlah Pool (1 - 16)</label>
+                    <select value={numGroups} onChange={e => setNumGroups(parseInt(e.target.value))}>
+                      {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].filter(n => n <= teams.length).map(n => <option key={n} value={n}>{n} Pool</option>)}
+                    </select>
+                  </div>
+                  <div style={{ padding: '10px 14px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.2)', borderRadius: 8, marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, color: '#FFD700' }}>~{Math.floor(teams.length / numGroups)} tim per pool</div>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={setupGroups}>
+                  {autoMode ? `⚡ Buat ${poolLetters.length} Pool Otomatis` : 'Buat Pool'}
+                </button>
+                <button className="btn btn-ghost" onClick={() => setShowGroupSetup(false)}>Batal</button>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={setupGroups}>Buat Pool</button>
-              <button className="btn btn-ghost" onClick={() => setShowGroupSetup(false)}>Batal</button>
-            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* GROUP SCORE MODAL */}
       {showScoreModal && editMatch && (
