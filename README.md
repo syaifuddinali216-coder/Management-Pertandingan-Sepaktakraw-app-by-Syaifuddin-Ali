@@ -9,7 +9,7 @@ Aplikasi manajemen turnamen sepak takraw berbasis web dengan:
 - ✅ Nomor: Regu Putra/Putri, Double Putra/Putri, Quadrant Putra/Putri
 - ✅ Laporan PDF lengkap (18 bagian sesuai format resmi)
 
----   
+---    
 
 ## 🔧 LANGKAH 1: Setup Firebase (WAJIB)
 
