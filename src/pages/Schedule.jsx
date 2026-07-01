@@ -291,6 +291,8 @@ export default function Schedule({ eventId }) {
     const key = raw.toUpperCase().trim()
     return !!codeToName[key] && codeToName[key] !== raw
   }
+
+  const exportExcel = async () => {
     if (!schedule || !assignments) return showToast('Belum ada jadwal!')
     showToast('Membuat Excel jadwal...')
     try {
