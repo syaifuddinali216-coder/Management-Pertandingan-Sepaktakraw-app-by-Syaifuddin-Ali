@@ -266,7 +266,31 @@ export default function Schedule({ eventId }) {
     showToast('Slot dikosongkan!')
   }
 
-  const exportExcel = async () => {
+  // ── Build kode→nama map dari semua nomor ─────────────────
+  // Setiap tim yang punya field 'code' akan di-map: { 'A1': 'UGM', 'B2': 'UNJ', ... }
+  const codeToName = useMemo(() => {
+    const map = {}
+    Object.values(allNomorData).forEach(nd => {
+      ;(nd.teams || []).forEach(t => {
+        if (t.code && t.name) map[t.code.toUpperCase().trim()] = t.name
+      })
+    })
+    return map
+  }, [allNomorData])
+
+  // Resolve: kalau ada kode yg cocok, ganti ke nama tim
+  const resolveName = (raw) => {
+    if (!raw) return raw
+    const key = raw.toUpperCase().trim()
+    return codeToName[key] || raw
+  }
+
+  // Apakah string ini masih kode (belum terganti nama)?
+  const isCode = (raw) => {
+    if (!raw) return false
+    const key = raw.toUpperCase().trim()
+    return !!codeToName[key] && codeToName[key] !== raw
+  }
     if (!schedule || !assignments) return showToast('Belum ada jadwal!')
     showToast('Membuat Excel jadwal...')
     try {
@@ -304,7 +328,9 @@ export default function Schedule({ eventId }) {
           const row = [`${slot.time}\n${slot.endTime}`]
           ;(slot.courts || []).forEach(ct => {
             if (ct.homeName && ct.awayName) {
-              row.push(`${ct.nomorName || ''}\n${ct.homeName}\nvs\n${ct.awayName}${ct.note ? `\n(${ct.note})` : ''}`)
+              const hd = resolveName(ct.homeName)
+              const ad = resolveName(ct.awayName)
+              row.push(`${ct.nomorName || ''}\n${hd}\nvs\n${ad}${ct.note ? `\n(${ct.note})` : ''}`)
             } else {
               row.push(ct.note || '')
             }
@@ -450,6 +476,10 @@ export default function Schedule({ eventId }) {
                   {/* Court cells */}
                   {(slot.courts || []).map((ct, ci) => {
                     const hasMatch = ct.homeName && ct.awayName
+                    const homeDisplay = resolveName(ct.homeName)
+                    const awayDisplay = resolveName(ct.awayName)
+                    const homeIsCode = isCode(ct.homeName)
+                    const awayIsCode = isCode(ct.awayName)
                     return (
                       <div key={ci}
                         onClick={() => openEditSlot(si, ci)}
@@ -466,9 +496,15 @@ export default function Schedule({ eventId }) {
                         {hasMatch ? (
                           <>
                             <div style={{ fontSize: 10, color: '#4ade80', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{ct.nomorName || ''}</div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{ct.homeName}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                              {homeIsCode && <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: '#FFD700', background: 'rgba(255,215,0,0.15)', padding: '1px 5px', borderRadius: 3 }}>{ct.homeName}</span>}
+                              <div style={{ fontSize: 13, fontWeight: 700, color: homeIsCode ? '#FFD700' : '#fff' }}>{homeDisplay}</div>
+                            </div>
                             <div style={{ fontSize: 11, color: 'rgba(255,215,0,0.7)', marginBottom: 2 }}>vs</div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{ct.awayName}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              {awayIsCode && <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: '#FFD700', background: 'rgba(255,215,0,0.15)', padding: '1px 5px', borderRadius: 3 }}>{ct.awayName}</span>}
+                              <div style={{ fontSize: 13, fontWeight: 700, color: awayIsCode ? '#FFD700' : '#fff' }}>{awayDisplay}</div>
+                            </div>
                             {ct.note && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{ct.note}</div>}
                           </>
                         ) : (
