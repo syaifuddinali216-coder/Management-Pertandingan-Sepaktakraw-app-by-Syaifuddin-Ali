@@ -36,29 +36,26 @@ function SetScoreInput({ sets, onChange, homeLabel, awayLabel }) {
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, marginBottom: 8 }}>
-        <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--green-accent)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>{homeLabel}</div>
+        <div style={{ textAlign: 'center', fontSize: 11, color: '#FFD700', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>{homeLabel}</div>
         <div />
-        <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--green-accent)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>{awayLabel}</div>
+        <div style={{ textAlign: 'center', fontSize: 11, color: '#FFD700', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>{awayLabel}</div>
       </div>
       {[0, 1, 2].map(i => (
         <div key={i} style={{ marginBottom: 12 }}>
-          <label style={{ marginBottom: 6, textAlign: 'center', display: 'block' }}>Set {i + 1} {i === 2 ? '(Jika Diperlukan)' : ''}</label>
+          <label style={{ marginBottom: 6, textAlign: 'center', display: 'block', color: 'rgba(255,255,255,0.7)' }}>
+            Set {i + 1} {i === 2 ? '(Jika Diperlukan)' : ''}
+          </label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'center' }}>
-            <input type="number" min="0" max="17" placeholder="0"
+            <input type="number" min="0" placeholder="0"
               value={sets[i]?.home ?? ''}
               onChange={e => { const s = [...sets]; s[i] = { ...s[i], home: e.target.value }; onChange(s) }}
               style={{ textAlign: 'center', fontSize: 22, fontFamily: 'var(--font-mono)', fontWeight: 700 }} />
-            <span style={{ color: 'var(--gray-600)', textAlign: 'center', fontWeight: 700, fontSize: 18 }}>—</span>
-            <input type="number" min="0" max="17" placeholder="0"
+            <span style={{ color: 'rgba(255,215,0,0.5)', textAlign: 'center', fontWeight: 700, fontSize: 18 }}>—</span>
+            <input type="number" min="0" placeholder="0"
               value={sets[i]?.away ?? ''}
               onChange={e => { const s = [...sets]; s[i] = { ...s[i], away: e.target.value }; onChange(s) }}
               style={{ textAlign: 'center', fontSize: 22, fontFamily: 'var(--font-mono)', fontWeight: 700 }} />
           </div>
-          {sets[i]?.home !== undefined && sets[i]?.away !== undefined && sets[i].home !== '' && sets[i].away !== '' && (
-            <p style={{ fontSize: 11, color: validSetScore(sets[i].home, sets[i].away) ? 'var(--green-accent)' : 'var(--red-card)', marginTop: 4, fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
-              {validSetScore(sets[i].home, sets[i].away) ? '✓ Skor valid' : '⚠ Skor tidak valid (maks 15, deuce 16-17)'}
-            </p>
-          )}
         </div>
       ))}
     </div>
@@ -276,92 +273,197 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
           <p>Bracket knockout belum dibuat.</p>
           <p style={{ fontSize: 13, marginTop: 8 }}>Klik "Setup Bracket" untuk memulai fase knockout.</p>
         </div>
-      ) : (
-        <div style={{ overflowX: 'auto', paddingBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', minWidth: 'max-content', position: 'relative' }}>
-            {rounds.map((round, ri) => {
-              const rMatches = koMatches.filter(m => m.round === round)
-              const rName = rMatches[0]?.roundName || `Babak ${round}`
-              const matchH = 72 // match card height
-              const matchGap = 16
-              const totalRounds = rounds.length
-              const spacing = Math.pow(2, ri) * (matchH + matchGap)
+      ) : (() => {
+        // Constants
+        const CARD_W = 200
+        const CARD_H = 64
+        const CARD_GAP = 16 // gap between cards in same round
+        const ROUND_GAP = 60 // horizontal gap between rounds
+        const CONNECTOR_W = ROUND_GAP
+        const LINE_COLOR = '#FFD700'
+        const LINE_WIDTH = 2
 
-              return (
-                <div key={round} style={{ display: 'flex', alignItems: 'flex-start', marginRight: 0 }}>
-                  <div style={{ width: 220 }}>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--green-accent)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10, textAlign: 'center', fontWeight: 700 }}>{rName}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      {rMatches.map((match, mi) => {
-                        const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(match.sets)
-                        const marginTop = mi === 0 ? Math.pow(2, ri) * matchH / 2 - matchH / 2 : Math.pow(2, ri + 1) * (matchH + matchGap) / 2 - matchH / 2
-                        return (
-                          <div key={match.id} style={{ marginBottom: matchGap, marginTop: mi === 0 ? `${Math.pow(2, ri) * (matchH/2 + matchGap/2) - matchH/2}px` : `${Math.pow(2, ri + 1) * (matchH + matchGap) - matchH - matchGap}px` }}>
-                            <div
-                              onClick={() => openScore(match)}
-                              style={{
-                                background: 'var(--bg-card)', border: `1.5px solid ${match.status === 'done' ? 'var(--green-accent)' : 'var(--border)'}`,
-                                borderRadius: 10, overflow: 'hidden',
-                                cursor: match.homeId && match.awayId ? 'pointer' : 'default',
-                                transition: 'all 0.15s', boxShadow: 'var(--shadow)',
-                              }}
-                              onMouseEnter={e => { if (match.homeId && match.awayId) { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(196,127,0,0.2)' } }}
-                              onMouseLeave={e => { e.currentTarget.style.borderColor = match.status === 'done' ? 'var(--green-accent)' : 'var(--border)'; e.currentTarget.style.boxShadow = 'var(--shadow)' }}
-                            >
-                              {[
-                                { id: match.homeId, score: hw, isWin: match.winnerId === match.homeId },
-                                { id: match.awayId, score: aw, isWin: match.winnerId === match.awayId }
-                              ].map((side, si) => (
-                                <div key={si} style={{
-                                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                  padding: '9px 12px',
-                                  background: side.isWin ? 'rgba(26,107,58,0.07)' : 'transparent',
-                                  borderBottom: si === 0 ? '1px solid var(--gray-200)' : 'none',
-                                }}>
-                                  <span style={{ fontSize: 12, fontWeight: side.isWin ? 700 : 400, color: side.isWin ? 'var(--green-field)' : side.id ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                                    {side.isWin && '✓ '}{getTeamName(side.id)}
-                                  </span>
-                                  {match.status === 'done' && (
-                                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: side.isWin ? 'var(--green-field)' : 'var(--text-muted)', fontSize: 13, background: side.isWin ? 'rgba(26,107,58,0.1)' : 'var(--gray-100)', padding: '2px 8px', borderRadius: 4 }}>{side.score}</span>
-                                  )}
-                                </div>
-                              ))}
-                              {match.date && <div style={{ padding: '3px 12px', fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', background: 'var(--gray-100)', borderTop: '1px solid var(--border)' }}>{new Date(match.date).toLocaleDateString('id-ID')} {match.time}</div>}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                  {/* Connector lines SVG */}
-                  {ri < rounds.length - 1 && (() => {
-                    const nextRound = rounds[ri + 1]
-                    const nextMatches = koMatches.filter(m => m.round === nextRound)
-                    const h = rMatches.length * (matchH + matchGap)
+        // Build rounds array from highest (first round) to lowest (final)
+        const sortedRounds = [...rounds] // already sorted b-a (highest first = earliest round)
+
+        // Calculate positions for each match in each round
+        // First round: matches stacked with CARD_GAP between them
+        // Each subsequent round: matches centered between their 2 feeders
+
+        const matchPos = {} // matchId -> { x, y, cx, cy } (top-left + center)
+
+        sortedRounds.forEach((round, ri) => {
+          const rMatches = koMatches.filter(m => m.round === round).sort((a, b) => a.position - b.position)
+          const x = ri * (CARD_W + CONNECTOR_W)
+
+          rMatches.forEach((match, mi) => {
+            let y
+            if (ri === 0) {
+              // First round: stack evenly
+              y = mi * (CARD_H + CARD_GAP)
+            } else {
+              // Center between the two feeder matches
+              const prevRound = sortedRounds[ri - 1]
+              const feeder1 = koMatches.find(m => m.round === prevRound && m.position === mi * 2)
+              const feeder2 = koMatches.find(m => m.round === prevRound && m.position === mi * 2 + 1)
+              const y1 = feeder1 ? (matchPos[feeder1.id]?.cy ?? 0) : 0
+              const y2 = feeder2 ? (matchPos[feeder2.id]?.cy ?? 0) : y1 + CARD_H + CARD_GAP
+              y = (y1 + y2) / 2 - CARD_H / 2
+            }
+
+            matchPos[match.id] = {
+              x, y,
+              cx: x + CARD_W / 2,
+              cy: y + CARD_H / 2,
+            }
+          })
+        })
+
+        // Total SVG size
+        const lastRound = sortedRounds[sortedRounds.length - 1]
+        const lastMatches = koMatches.filter(m => m.round === lastRound)
+        const totalW = sortedRounds.length * (CARD_W + CONNECTOR_W) - CONNECTOR_W + 20
+        const totalH = Math.max(
+          ...Object.values(matchPos).map(p => p.y + CARD_H),
+          200
+        ) + 20
+
+        return (
+          <div style={{ overflowX: 'auto', overflowY: 'auto', paddingBottom: 16 }}>
+            <div style={{ position: 'relative', width: totalW, height: totalH, minWidth: totalW }}>
+
+              {/* SVG connector lines */}
+              <svg
+                width={totalW} height={totalH}
+                style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+              >
+                {sortedRounds.map((round, ri) => {
+                  if (ri === sortedRounds.length - 1) return null
+                  const rMatches = koMatches.filter(m => m.round === round).sort((a, b) => a.position - b.position)
+                  return rMatches.map((match, mi) => {
+                    const pos = matchPos[match.id]
+                    if (!pos) return null
+                    // Right edge of this card → mid connector
+                    const x1 = pos.x + CARD_W
+                    const y1 = pos.cy
+                    const xMid = pos.x + CARD_W + CONNECTOR_W / 2
+
+                    // Find paired match (same parent)
+                    const parentPos = Math.floor(mi / 2)
+                    const isPair1 = mi % 2 === 0
+                    const pairedMatch = rMatches[isPair1 ? mi + 1 : mi - 1]
+                    const pairedPos = pairedMatch ? matchPos[pairedMatch.id] : null
+
+                    // Next round match
+                    const nextRound = sortedRounds[ri + 1]
+                    const nextMatch = koMatches.find(m => m.round === nextRound && m.position === parentPos)
+                    const nextPos = nextMatch ? matchPos[nextMatch.id] : null
+
+                    const yMid = nextPos ? nextPos.cy : (pairedPos ? (y1 + pairedPos.cy) / 2 : y1)
+
                     return (
-                      <svg width="40" height={Math.max(h, nextMatches.length * (matchH + matchGap) * 2)} style={{ flexShrink: 0, overflow: 'visible', marginTop: `${Math.pow(2, ri) * (matchH/2 + matchGap/2) - matchH/2}px` }}>
-                        {rMatches.map((match, mi) => {
-                          const yTop = mi * (Math.pow(2, ri + 1) * (matchH + matchGap)) + matchH / 2
-                          const yBottom = yTop + Math.pow(2, ri) * (matchH + matchGap)
-                          const yMid = (yTop + yBottom) / 2
-                          return (
-                            <g key={match.id}>
-                              <line x1="0" y1={yTop} x2="20" y2={yTop} stroke="var(--green-accent)" strokeWidth="1.5" />
-                              <line x1="20" y1={yTop} x2="20" y2={yBottom} stroke="var(--green-accent)" strokeWidth="1.5" />
-                              <line x1="0" y1={yBottom} x2="20" y2={yBottom} stroke="var(--green-accent)" strokeWidth="1.5" />
-                              <line x1="20" y1={yMid} x2="40" y2={yMid} stroke="var(--green-accent)" strokeWidth="1.5" />
-                            </g>
-                          )
-                        })}
-                      </svg>
+                      <g key={match.id}>
+                        {/* Horizontal line from card to midpoint */}
+                        <line x1={x1} y1={y1} x2={xMid} y2={y1} stroke={LINE_COLOR} strokeWidth={LINE_WIDTH} />
+                        {/* Only draw vertical + right connector for the first of the pair */}
+                        {isPair1 && pairedPos && (
+                          <>
+                            {/* Vertical line connecting both */}
+                            <line x1={xMid} y1={y1} x2={xMid} y2={pairedPos.cy} stroke={LINE_COLOR} strokeWidth={LINE_WIDTH} />
+                            {/* Horizontal line from mid to next card */}
+                            {nextPos && (
+                              <line x1={xMid} y1={yMid} x2={nextPos.x} y2={yMid} stroke={LINE_COLOR} strokeWidth={LINE_WIDTH} />
+                            )}
+                          </>
+                        )}
+                        {isPair1 && pairedPos && (
+                          <line x1={x1} y1={pairedPos.cy} x2={xMid} y2={pairedPos.cy} stroke={LINE_COLOR} strokeWidth={LINE_WIDTH} />
+                        )}
+                      </g>
                     )
-                  })()}
-                </div>
-              )
-            })}
+                  })
+                })}
+              </svg>
+
+              {/* Round labels */}
+              {sortedRounds.map((round, ri) => {
+                const rMatches = koMatches.filter(m => m.round === round)
+                const rName = rMatches[0]?.roundName || `Babak ${round}`
+                const x = ri * (CARD_W + CONNECTOR_W)
+                return (
+                  <div key={`label-${round}`} style={{
+                    position: 'absolute', top: 0, left: x, width: CARD_W,
+                    textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10,
+                    color: '#FFD700', textTransform: 'uppercase', letterSpacing: 2, fontWeight: 700,
+                    paddingBottom: 8,
+                  }}>
+                    {rName}
+                  </div>
+                )
+              })}
+
+              {/* Match cards */}
+              {sortedRounds.map((round, ri) => {
+                const rMatches = koMatches.filter(m => m.round === round).sort((a, b) => a.position - b.position)
+                return rMatches.map(match => {
+                  const pos = matchPos[match.id]
+                  if (!pos) return null
+                  const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(match.sets)
+                  const hasTeams = match.homeId && match.awayId
+                  const TOP_OFFSET = 28 // space for round label
+
+                  return (
+                    <div
+                      key={match.id}
+                      onClick={() => openScore(match)}
+                      style={{
+                        position: 'absolute',
+                        left: pos.x, top: pos.y + TOP_OFFSET,
+                        width: CARD_W, height: CARD_H,
+                        background: match.status === 'done' ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.07)',
+                        border: `2px solid ${match.status === 'done' ? '#FFD700' : 'rgba(255,255,255,0.25)'}`,
+                        borderRadius: 8, overflow: 'hidden',
+                        cursor: hasTeams ? 'pointer' : 'default',
+                        transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={e => { if (hasTeams) { e.currentTarget.style.borderColor = '#FFD700'; e.currentTarget.style.background = 'rgba(255,215,0,0.12)' } }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = match.status === 'done' ? '#FFD700' : 'rgba(255,255,255,0.25)'; e.currentTarget.style.background = match.status === 'done' ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.07)' }}
+                    >
+                      {[
+                        { id: match.homeId, score: hw, isWin: match.winnerId === match.homeId },
+                        { id: match.awayId, score: aw, isWin: match.winnerId === match.awayId },
+                      ].map((side, si) => (
+                        <div key={si} style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '5px 10px', height: CARD_H / 2,
+                          background: side.isWin ? 'rgba(255,215,0,0.15)' : 'transparent',
+                          borderBottom: si === 0 ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                        }}>
+                          <span style={{
+                            fontSize: 12, fontWeight: side.isWin ? 700 : 400,
+                            color: side.isWin ? '#FFD700' : side.id ? '#fff' : 'rgba(255,255,255,0.3)',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130,
+                          }}>
+                            {side.isWin && '✓ '}{getTeamName(side.id)}
+                          </span>
+                          {match.status === 'done' && (
+                            <span style={{
+                              fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13,
+                              color: side.isWin ? '#FFD700' : 'rgba(255,255,255,0.5)',
+                              background: side.isWin ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.08)',
+                              padding: '1px 7px', borderRadius: 4, flexShrink: 0,
+                            }}>{side.score}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Setup Modal */}
       {showSetup && (
