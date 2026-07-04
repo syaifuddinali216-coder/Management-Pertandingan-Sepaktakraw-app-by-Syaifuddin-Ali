@@ -75,13 +75,13 @@ export default function AuthPage() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 20, background: `radial-gradient(ellipse at top, rgba(45,106,79,0.15) 0%, transparent 60%), var(--darker)`,
+      padding: 20, background: `radial-gradient(ellipse at top, rgba(106,47,160,0.25) 0%, transparent 60%), var(--darker)`,
     }}>
       <div style={{ width: '100%', maxWidth: 420 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ fontSize: 48, marginBottom: 8 }}>🏆</div>
-          <h1 style={{ fontSize: 32, color: 'var(--gold)', lineHeight: 1.1, marginBottom: 6 }}>
+          <h1 style={{ fontSize: 32, color: "#FFD700", lineHeight: 1.1, marginBottom: 6 }}>
             TURNAMEN MANAGER<br />SEPAK TAKRAW
           </h1>
           <p style={{ fontSize: 12, color: 'var(--green-accent)', fontFamily: 'var(--font-mono)', letterSpacing: 2 }}>
