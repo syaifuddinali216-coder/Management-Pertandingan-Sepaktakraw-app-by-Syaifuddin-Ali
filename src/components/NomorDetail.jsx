@@ -156,12 +156,12 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
   const setupKnockout = async () => {
     if (selectedTeams.length < 2) return showToast('Pilih minimal 2 tim!')
     const n = selectedTeams.length
-    const pow2 = [2, 4, 8, 16].find(p => p >= n) || 16
+    const pow2 = [2, 4, 8, 16, 32, 64].find(p => p >= n) || 64
     const teamList = [...selectedTeams]
     while (teamList.length < pow2) teamList.push(null)
 
     const rounds = Math.log2(pow2)
-    const roundNames = { 1: 'Final', 2: 'Semifinal', 3: 'Perempat Final', 4: 'Babak 16 Besar' }
+    const roundNames = { 1: 'Final', 2: 'Semifinal', 3: 'Perempat Final', 4: 'Babak 16 Besar', 5: 'Babak 32 Besar', 6: 'Babak 64 Besar' }
 
     // Delete old ko matches
     for (const m of koMatches) await deleteMatch(m.id)
