@@ -2,12 +2,23 @@ import React, { useState } from 'react'
 import { useNav } from './MainApp.jsx'
 import { useEvents, useNomors } from '../hooks/useFirestore.js'
 import NomorDetail from '../components/NomorDetail.jsx'
+import TeamNomorDetail from '../components/TeamNomorDetail.jsx'
 
 const NOMOR_OPTIONS = [
   'Regu Putra', 'Regu Putri',
   'Double Putra', 'Double Putri',
   'Quadrant Putra', 'Quadrant Putri',
+  '── TEAM EVENT ──',
+  'Team Regu Putra', 'Team Regu Putri',
+  'Team Double Putra', 'Team Double Putri',
 ]
+
+export const TEAM_EVENT_NOMORS = [
+  'Team Regu Putra', 'Team Regu Putri',
+  'Team Double Putra', 'Team Double Putri',
+]
+
+const isTeamEvent = (nomorName) => TEAM_EVENT_NOMORS.includes(nomorName)
 
 export default function EventDetail({ eventId }) {
   const { navigate } = useNav()
@@ -46,6 +57,16 @@ export default function EventDetail({ eventId }) {
 
   if (activeNomorId) {
     const nomor = nomors.find(n => n.id === activeNomorId)
+    if (isTeamEvent(nomor?.name)) {
+      return (
+        <TeamNomorDetail
+          eventId={eventId}
+          nomor={nomor}
+          event={event}
+          onBack={() => setActiveNomorId(null)}
+        />
+      )
+    }
     return (
       <NomorDetail
         eventId={eventId}
@@ -85,18 +106,21 @@ export default function EventDetail({ eventId }) {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-          {nomors.map((nomor, i) => (
-            <div key={nomor.id} className="card" style={{ cursor: 'pointer', transition: 'border-color 0.15s', position: 'relative' }}
+          {nomors.map((nomor, i) => {
+            const isTeam = TEAM_EVENT_NOMORS.includes(nomor.name)
+            return (
+            <div key={nomor.id} className="card" style={{ cursor: 'pointer', transition: 'border-color 0.15s', position: 'relative', borderColor: isTeam ? 'rgba(255,215,0,0.3)' : undefined }}
               onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--gold)'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(64,145,108,0.2)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = isTeam ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.1)'}
             >
               <div onClick={() => setActiveNomorId(nomor.id)}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--green-accent)', letterSpacing: 2, marginBottom: 10 }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#FFD700', letterSpacing: 2, marginBottom: 10 }}>
                   NOMOR {String(i + 1).padStart(2, '0')}
                 </div>
-                <h2 style={{ fontSize: 26, color: 'var(--white)', marginBottom: 12, letterSpacing: 0.5 }}>{nomor.name.toUpperCase()}</h2>
+                <h2 style={{ fontSize: 22, color: '#fff', marginBottom: 10, letterSpacing: 0.5 }}>{nomor.name.toUpperCase()}</h2>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
                   <span className="badge badge-gray">{nomor.format === 'grup-knockout' ? 'Grup + Knockout' : nomor.format === 'knockout' ? 'Knockout' : 'Round Robin'}</span>
+                  {isTeam && <span className="badge badge-gold">⭐ Team Event</span>}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
@@ -105,7 +129,8 @@ export default function EventDetail({ eventId }) {
                 <button className="btn btn-danger" style={{ padding: '8px 12px', fontSize: 13 }} onClick={() => remove(nomor.id)}>🗑️</button>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -115,10 +140,24 @@ export default function EventDetail({ eventId }) {
             <h2>{editId ? 'EDIT NOMOR' : 'TAMBAH NOMOR'}</h2>
             <div className="form-group">
               <label>Nomor Pertandingan</label>
-              <select value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}>
-                {NOMOR_OPTIONS.map(n => <option key={n} value={n}>{n}</option>)}
+              <select value={form.name} onChange={e => {
+                const val = e.target.value
+                if (val === '── TEAM EVENT ──') return
+                setForm({ ...form, name: val })
+              }}>
+                {NOMOR_OPTIONS.map(n => (
+                  <option key={n} value={n} disabled={n === '── TEAM EVENT ──'}
+                    style={{ color: n === '── TEAM EVENT ──' ? '#FFD700' : undefined, fontWeight: n === '── TEAM EVENT ──' ? 700 : 400 }}>
+                    {n}
+                  </option>
+                ))}
                 <option value="Lainnya">Lainnya (custom)</option>
               </select>
+              {TEAM_EVENT_NOMORS.includes(form.name) && (
+                <div style={{ marginTop: 8, padding: '10px 12px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 8, fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
+                  ⭐ <strong style={{ color: '#FFD700' }}>Team Event</strong> — Format khusus: setiap match terdiri dari 3 pertandingan regu (Tim A1 vs Tim B1, A2 vs B2, A3 vs B3). Di fase grup semua regu main, di knockout bisa berhenti setelah 2 regu menang.
+                </div>
+              )}
             </div>
             {form.name === 'Lainnya' && (
               <div className="form-group">
