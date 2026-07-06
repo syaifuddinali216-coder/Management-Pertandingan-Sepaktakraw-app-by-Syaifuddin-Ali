@@ -8,7 +8,7 @@ const NOMOR_OPTIONS = [
   'Regu Putra', 'Regu Putri',
   'Double Putra', 'Double Putri',
   'Quadrant Putra', 'Quadrant Putri',
-  '── TEAM EVENT ──',
+  '--- TEAM EVENT ---',
   'Team Regu Putra', 'Team Regu Putri',
   'Team Double Putra', 'Team Double Putri',
 ]
@@ -142,11 +142,11 @@ export default function EventDetail({ eventId }) {
               <label>Nomor Pertandingan</label>
               <select value={form.name} onChange={e => {
                 const val = e.target.value
-                if (val === '── TEAM EVENT ──') return
+                if (val === '--- TEAM EVENT ---') return
                 setForm({ ...form, name: val })
               }}>
                 {NOMOR_OPTIONS.map(n => (
-                  <option key={n} value={n} disabled={n === '── TEAM EVENT ──'}
+                  <option key={n} value={n} disabled={n === '--- TEAM EVENT ---'}
                     style={{ color: n === '── TEAM EVENT ──' ? '#FFD700' : undefined, fontWeight: n === '── TEAM EVENT ──' ? 700 : 400 }}>
                     {n}
                   </option>
