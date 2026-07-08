@@ -33,26 +33,56 @@ const calcTeamMatchResult = (subMatches) => {
   return { homeWins, awayWins }
 }
 
-// Klasemen team event
+// Hitung total set & poin dari semua sub-match
+const calcTeamTotals = (subMatches) => {
+  let setW = 0, setL = 0, ptsW = 0, ptsL = 0
+  ;(subMatches || []).forEach(sub => {
+    ;(sub?.sets || []).forEach(s => {
+      if (s?.home === '' && s?.away === '') return
+      const h = parseInt(s?.home) || 0, a = parseInt(s?.away) || 0
+      ptsW += h; ptsL += a
+      if (h > a) setW++; else if (a > h) setL++
+    })
+  })
+  return { setW, setL, ptsW, ptsL }
+}
+
+// Klasemen team event — lengkap dengan tiebreaker
 function calcTeamStandings(teams, matches) {
   const tbl = {}
-  teams.forEach(t => tbl[t.id] = { team: t, P: 0, W: 0, L: 0, SubW: 0, SubL: 0, Pts: 0 })
+  teams.forEach(t => tbl[t.id] = { team: t, P: 0, W: 0, L: 0, SubW: 0, SubL: 0, SetW: 0, SetL: 0, PtsW: 0, PtsL: 0, Pts: 0 })
 
   matches.filter(m => m.status === 'done' && m.phase === 'group').forEach(m => {
     const h = tbl[m.homeId], a = tbl[m.awayId]
     if (!h || !a) return
-    const { homeWins: hw, awayWins: aw } = calcTeamMatchResult(m.subMatches || [{}, {}, {}])
+    const { homeWins: hw, awayWins: aw } = calcTeamMatchResult(m.subMatches || [])
+
+    // Hitung total set & poin dari semua regu
+    const hTotals = calcTeamTotals(m.subMatches)
     h.P++; a.P++
     h.SubW += hw; h.SubL += aw
     a.SubW += aw; a.SubL += hw
+    h.SetW += hTotals.setW; h.SetL += hTotals.setL
+    a.SetW += hTotals.setL; a.SetL += hTotals.setW
+    h.PtsW += hTotals.ptsW; h.PtsL += hTotals.ptsL
+    a.PtsW += hTotals.ptsL; a.PtsL += hTotals.ptsW
+
     if (hw > aw) { h.W++; h.Pts += 3; a.L++ }
     else if (aw > hw) { a.W++; a.Pts += 3; h.L++ }
     else { h.Pts++; a.Pts++ }
   })
 
   return Object.values(tbl).sort((a, b) => {
+    // 1. Poin kemenangan
     if (b.Pts !== a.Pts) return b.Pts - a.Pts
-    return (b.SubW - b.SubL) - (a.SubW - a.SubL)
+    // 2. Selisih regu
+    const aRD = a.SubW - a.SubL, bRD = b.SubW - b.SubL
+    if (bRD !== aRD) return bRD - aRD
+    // 3. Selisih set
+    const aSD = a.SetW - a.SetL, bSD = b.SetW - b.SetL
+    if (bSD !== aSD) return bSD - aSD
+    // 4. Selisih poin
+    return (b.PtsW - b.PtsL) - (a.PtsW - a.PtsL)
   })
 }
 
@@ -112,11 +142,17 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
 
   const [showScoreModal, setShowScoreModal] = useState(false)
   const [editMatch, setEditMatch] = useState(null)
-  // 3 sub-matches, each has 3 sets
   const [subSets, setSubSets] = useState([[{},{},{}],[{},{},{}],[{},{},{}]])
   const [matchDate, setMatchDate] = useState('')
   const [matchTime, setMatchTime] = useState('')
   const [savingMatch, setSavingMatch] = useState(false)
+
+  // Knockout state
+  const [showKoSetup, setShowKoSetup] = useState(false)
+  const [selectedKoTeams, setSelectedKoTeams] = useState([])
+  const [koSubSets, setKoSubSets] = useState([[{},{},{}],[{},{},{}],[{},{},{}]])
+  const [koEditMatch, setKoEditMatch] = useState(null)
+  const [showKoScoreModal, setShowKoScoreModal] = useState(false)
 
   const getTeamName = (id) => teams.find(t => t.id === id)?.name || 'TBD'
 
@@ -196,7 +232,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
     setTab('groups')
   }
 
-  // ── Score input ───────────────────────────────────────────
+  // ── Score input (grup) ────────────────────────────────────
   const openScore = (match) => {
     setEditMatch(match)
     setSubSets((match.subMatches || [{sets:[{},{},{}]},{sets:[{},{},{}]},{sets:[{},{},{}]}]).map(s => s.sets || [{},{},{}]))
@@ -219,15 +255,98 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
     showToast('Skor tersimpan!')
   }
 
+  const koMatches = matches.filter(m => m.phase === 'knockout')
+  const koRounds = [...new Set(koMatches.map(m => m.round))].sort((a,b) => b-a)
+  const koChampion = koMatches.find(m => m.round === 1 && m.status === 'done')?.winnerId
+  const CARD_W = 200
+
   const groupMatches = matches.filter(m => m.phase === 'group')
+
   const uniqueGroups = [...new Set(groupMatches.map(m => m.groupId))].map(gid => {
     const m = groupMatches.find(x => x.groupId === gid)
     return { id: gid, name: m?.groupName || gid, teamIds: [...new Set(groupMatches.filter(x => x.groupId === gid).flatMap(x => [x.homeId, x.awayId]))] }
   })
 
+  const getSuggestedKoTeams = () => {
+    const suggestions = []
+    uniqueGroups.forEach(grp => {
+      const grpTeams = teams.filter(t => grp.teamIds.includes(t.id))
+      const grpMatchesForGrp = groupMatches.filter(m => m.groupId === grp.id)
+      const standings = calcTeamStandings(grpTeams, grpMatchesForGrp)
+      standings.slice(0, 2).forEach((row, i) => suggestions.push({ team: row.team, label: `${grp.name} #${i+1}`, pos: i }))
+    })
+    return suggestions
+  }
+
+  const setupKnockout = async () => {
+    if (selectedKoTeams.length < 2) return showToast('Pilih minimal 2 tim!')
+    const n = selectedKoTeams.length
+    const pow2 = [2,4,8,16,32,64].find(p => p >= n) || 64
+    const teamList = [...selectedKoTeams]
+    while (teamList.length < pow2) teamList.push(null)
+    const rounds = Math.log2(pow2)
+    const roundNames = { 1:'Final', 2:'Semifinal', 3:'Perempat Final', 4:'Babak 16 Besar', 5:'Babak 32 Besar', 6:'Babak 64 Besar' }
+    for (const m of koMatches) await deleteMatch(m.id)
+    for (let r = rounds; r >= 1; r--) {
+      const pairCount = Math.pow(2, r-1)
+      for (let i = 0; i < pairCount; i++) {
+        const isFirst = r === rounds
+        await addMatch({
+          phase: 'knockout', round: r,
+          roundName: roundNames[r] || `Babak ${r}`,
+          position: i,
+          homeId: isFirst ? (teamList[i*2]?.id || null) : null,
+          awayId: isFirst ? (teamList[i*2+1]?.id || null) : null,
+          isTeamEvent: true,
+          subMatches: [
+            { label: 'Regu 1', sets: [{},{},{}] },
+            { label: 'Regu 2', sets: [{},{},{}] },
+            { label: 'Regu 3', sets: [{},{},{}] },
+          ],
+          status: 'pending', date: '', time: '', winnerId: null,
+        })
+      }
+    }
+    setShowKoSetup(false)
+    showToast('Bracket knockout berhasil dibuat!')
+  }
+
+  const openKoScore = (match) => {
+    if (!match.homeId || !match.awayId) return showToast('Tunggu hasil babak sebelumnya!')
+    setKoEditMatch(match)
+    setKoSubSets((match.subMatches || [{sets:[{},{},{}]},{sets:[{},{},{}]},{sets:[{},{},{}]}]).map(s => s.sets || [{},{},{}]))
+    setMatchDate(match.date || '')
+    setMatchTime(match.time || '')
+    setShowKoScoreModal(true)
+  }
+
+  const saveKoScore = async () => {
+    const subMatches = [
+      { label: 'Regu 1', sets: koSubSets[0] },
+      { label: 'Regu 2', sets: koSubSets[1] },
+      { label: 'Regu 3', sets: koSubSets[2] },
+    ]
+    const { homeWins: hw, awayWins: aw } = calcTeamMatchResult(subMatches)
+    if (hw === aw) return showToast('Tidak boleh seri di knockout! Lanjutkan regu ke-3.')
+    const winnerId = hw > aw ? koEditMatch.homeId : koEditMatch.awayId
+    setSavingMatch(true)
+    await updateMatch(koEditMatch.id, { subMatches, date: matchDate, time: matchTime, status: 'done', homeTeamWins: hw, awayTeamWins: aw, winnerId })
+    const nextRound = koEditMatch.round - 1
+    if (nextRound >= 1) {
+      const nextPos = Math.floor(koEditMatch.position / 2)
+      const isHome = koEditMatch.position % 2 === 0
+      const nextMatch = koMatches.find(m => m.round === nextRound && m.position === nextPos)
+      if (nextMatch) await updateMatch(nextMatch.id, isHome ? { homeId: winnerId } : { awayId: winnerId })
+    }
+    setSavingMatch(false)
+    setShowKoScoreModal(false)
+    showToast(koEditMatch.round === 1 ? '🏆 Selesai! Juara telah ditentukan.' : 'Skor knockout tersimpan!')
+  }
+
   const tabs = [
     { id: 'teams', label: '🏅 Tim Peserta' },
     { id: 'groups', label: '📊 Pool / Grup' },
+    { id: 'knockout', label: '🏆 Knockout' },
   ]
 
   return (
@@ -324,20 +443,28 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                     <div className="card">
                       <div className="tag-line" style={{ marginBottom: 12, fontSize: 10 }}>Klasemen</div>
                       <table>
-                        <thead><tr><th>#</th><th>Tim</th><th>P</th><th>M</th><th>K</th><th>Regu+</th><th>Regu-</th><th>Pts</th></tr></thead>
+                        <thead><tr><th>#</th><th>Tim</th><th>P</th><th>M</th><th>K</th><th>Regu+</th><th>Regu-</th><th>ΔR</th><th>Set+</th><th>Set-</th><th>ΔS</th><th>Pts</th></tr></thead>
                         <tbody>
-                          {standings.map((row, i) => (
-                            <tr key={row.team.id} style={{ background: i < 2 ? 'rgba(255,215,0,0.06)' : 'transparent' }}>
-                              <td><span style={{ display: 'inline-block', width: 22, height: 22, lineHeight: '22px', textAlign: 'center', borderRadius: 4, fontSize: 11, fontWeight: 700, background: i < 2 ? '#FFD700' : 'rgba(255,255,255,0.1)', color: i < 2 ? '#1a0a2e' : 'rgba(255,255,255,0.5)' }}>{i + 1}</span></td>
-                              <td style={{ fontWeight: i < 2 ? 700 : 500, color: i < 2 ? '#FFD700' : '#fff' }}>{row.team.name}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{row.P}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#4ade80', fontWeight: 600 }}>{row.W}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#ff9999' }}>{row.L}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{row.SubW}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{row.SubL}</td>
-                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700, color: '#FFD700' }}>{row.Pts}</td>
-                            </tr>
-                          ))}
+                          {standings.map((row, i) => {
+                            const rd = row.SubW - row.SubL
+                            const sd = row.SetW - row.SetL
+                            return (
+                              <tr key={row.team.id} style={{ background: i < 2 ? 'rgba(255,215,0,0.06)' : 'transparent' }}>
+                                <td><span style={{ display: 'inline-block', width: 22, height: 22, lineHeight: '22px', textAlign: 'center', borderRadius: 4, fontSize: 11, fontWeight: 700, background: i < 2 ? '#FFD700' : 'rgba(255,255,255,0.1)', color: i < 2 ? '#1a0a2e' : 'rgba(255,255,255,0.5)' }}>{i + 1}</span></td>
+                                <td style={{ fontWeight: i < 2 ? 700 : 500, color: i < 2 ? '#FFD700' : '#fff', whiteSpace: 'nowrap' }}>{row.team.name}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>{row.P}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#4ade80', fontWeight: 600, textAlign: 'center' }}>{row.W}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#ff9999', textAlign: 'center' }}>{row.L}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>{row.SubW}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>{row.SubL}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: rd > 0 ? '#4ade80' : rd < 0 ? '#ff9999' : 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{rd > 0 ? `+${rd}` : rd}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>{row.SetW}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>{row.SetL}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: sd > 0 ? '#4ade80' : sd < 0 ? '#ff9999' : 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{sd > 0 ? `+${sd}` : sd}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: '#FFD700', textAlign: 'center' }}>{row.Pts}</td>
+                              </tr>
+                            )
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -381,6 +508,156 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
             })}
           </div>
         )
+      )}
+
+      {/* KNOCKOUT TAB */}
+      {tab === 'knockout' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
+              {koMatches.length === 0 ? 'Bracket belum dibuat.' : `${koMatches.filter(m => m.status === 'done').length}/${koMatches.length} match selesai`}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-primary" onClick={() => { setSelectedKoTeams(getSuggestedKoTeams().map(s => s.team)); setShowKoSetup(true) }}>
+                {koMatches.length > 0 ? '🔄 Reset Bracket' : '🏆 Setup Bracket'}
+              </button>
+            </div>
+          </div>
+
+          {/* Champion display */}
+          {koChampion && (() => {
+            const final = koMatches.find(m => m.round === 1 && m.status === 'done')
+            const runnerUp = final ? (final.winnerId === final.homeId ? final.awayId : final.homeId) : null
+            const semis = koMatches.filter(m => m.round === 2 && m.status === 'done')
+            const juara3 = semis.map(m => m.winnerId === m.homeId ? m.awayId : m.homeId)
+            return (
+              <div style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05))', border: '2px solid #FFD700', borderRadius: 14, padding: '16px 20px', marginBottom: 20 }}>
+                <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: '#FFD700', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, fontWeight: 700 }}>🏆 Hasil Akhir</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 10 }}>
+                  {[
+                    { medal: '🥇', label: 'JUARA I', id: koChampion },
+                    { medal: '🥈', label: 'JUARA II', id: runnerUp },
+                    ...juara3.map(id => ({ medal: '🥉', label: 'JUARA III', id })),
+                  ].filter(j => j.id).map((j, i) => (
+                    <div key={i} style={{ background: '#FFD700', border: '2px solid #B8860B', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 22 }}>{j.medal}</span>
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: '#5a0812', fontFamily: 'var(--font-mono)', letterSpacing: 1 }}>{j.label}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#1a0a2e' }}>{getTeamName(j.id)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
+          {koMatches.length === 0 ? (
+            <div className="card empty-state">
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🏆</div>
+              <p>Bracket knockout belum dibuat.</p>
+              <p style={{ fontSize: 13, marginTop: 8 }}>Klik "Setup Bracket" untuk memulai fase gugur.</p>
+            </div>
+          ) : (() => {
+            // Bracket rendering
+            const CARD_H = 64, ROUND_GAP = 60
+            const matchPos = {}
+            koRounds.forEach((round, ri) => {
+              const rMatches = koMatches.filter(m => m.round === round).sort((a,b) => a.position - b.position)
+              const x = ri * (CARD_W + ROUND_GAP)
+              rMatches.forEach((match, mi) => {
+                let y
+                if (ri === 0) {
+                  y = mi * (CARD_H + 16)
+                } else {
+                  const prevRound = koRounds[ri-1]
+                  const f1 = koMatches.find(m => m.round === prevRound && m.position === mi*2)
+                  const f2 = koMatches.find(m => m.round === prevRound && m.position === mi*2+1)
+                  const y1 = f1 ? (matchPos[f1.id]?.cy ?? 0) : 0
+                  const y2 = f2 ? (matchPos[f2.id]?.cy ?? 0) : y1 + CARD_H + 16
+                  y = (y1 + y2) / 2 - CARD_H / 2
+                }
+                matchPos[match.id] = { x, y, cx: x + CARD_W/2, cy: y + CARD_H/2 }
+              })
+            })
+            const totalW = koRounds.length * (CARD_W + ROUND_GAP) - ROUND_GAP + 20
+            const totalH = Math.max(...Object.values(matchPos).map(p => p.y + CARD_H)) + 48
+            const LINE = '#FFD700'
+
+            return (
+              <div style={{ overflowX: 'auto', paddingBottom: 16 }}>
+                <div style={{ position: 'relative', width: totalW, height: totalH }}>
+                  <svg width={totalW} height={totalH} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                    {koRounds.map((round, ri) => {
+                      if (ri === koRounds.length - 1) return null
+                      const rMatches = koMatches.filter(m => m.round === round).sort((a,b) => a.position - b.position)
+                      return rMatches.map((match, mi) => {
+                        const pos = matchPos[match.id]; if (!pos) return null
+                        const x1 = pos.x + CARD_W, y1 = pos.cy
+                        const xMid = pos.x + CARD_W + ROUND_GAP/2
+                        const isPair1 = mi % 2 === 0
+                        const paired = rMatches[isPair1 ? mi+1 : mi-1]
+                        const pairedPos = paired ? matchPos[paired.id] : null
+                        const nextRound = koRounds[ri+1]
+                        const nextMatch = koMatches.find(m => m.round === nextRound && m.position === Math.floor(mi/2))
+                        const nextPos = nextMatch ? matchPos[nextMatch.id] : null
+                        const yMid = nextPos ? nextPos.cy : (pairedPos ? (y1 + pairedPos.cy)/2 : y1)
+                        return (
+                          <g key={match.id}>
+                            <line x1={x1} y1={y1} x2={xMid} y2={y1} stroke={LINE} strokeWidth={2} />
+                            {isPair1 && pairedPos && <>
+                              <line x1={xMid} y1={y1} x2={xMid} y2={pairedPos.cy} stroke={LINE} strokeWidth={2} />
+                              {nextPos && <line x1={xMid} y1={yMid} x2={nextPos.x} y2={yMid} stroke={LINE} strokeWidth={2} />}
+                              <line x1={x1} y1={pairedPos.cy} x2={xMid} y2={pairedPos.cy} stroke={LINE} strokeWidth={2} />
+                            </>}
+                          </g>
+                        )
+                      })
+                    })}
+                  </svg>
+
+                  {/* Round labels */}
+                  {koRounds.map((round, ri) => {
+                    const rName = koMatches.find(m => m.round === round)?.roundName || `Babak ${round}`
+                    return <div key={`lbl-${round}`} style={{ position: 'absolute', top: 0, left: ri*(CARD_W+ROUND_GAP), width: CARD_W, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: '#FFD700', textTransform: 'uppercase', letterSpacing: 2, fontWeight: 700 }}>{rName}</div>
+                  })}
+
+                  {/* Match cards */}
+                  {koRounds.map(round => {
+                    const rMatches = koMatches.filter(m => m.round === round).sort((a,b) => a.position - b.position)
+                    return rMatches.map(match => {
+                      const pos = matchPos[match.id]; if (!pos) return null
+                      const { homeWins: hw, awayWins: aw } = calcTeamMatchResult(match.subMatches || [])
+                      const hasTeams = match.homeId && match.awayId
+                      const TOP = 20
+                      return (
+                        <div key={match.id} onClick={() => openKoScore(match)}
+                          style={{ position: 'absolute', left: pos.x, top: pos.y + TOP, width: CARD_W, height: CARD_H, background: match.status === 'done' ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.07)', border: `2px solid ${match.status === 'done' ? '#FFD700' : 'rgba(255,255,255,0.2)'}`, borderRadius: 8, overflow: 'hidden', cursor: hasTeams ? 'pointer' : 'default', transition: 'all 0.15s' }}
+                          onMouseEnter={e => { if (hasTeams) { e.currentTarget.style.borderColor = '#FFD700'; e.currentTarget.style.background = 'rgba(255,215,0,0.12)' } }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = match.status === 'done' ? '#FFD700' : 'rgba(255,255,255,0.2)'; e.currentTarget.style.background = match.status === 'done' ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.07)' }}
+                        >
+                          {[
+                            { id: match.homeId, score: hw, isWin: match.winnerId === match.homeId },
+                            { id: match.awayId, score: aw, isWin: match.winnerId === match.awayId },
+                          ].map((side, si) => (
+                            <div key={si} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', height: CARD_H/2, background: side.isWin ? 'rgba(255,215,0,0.15)' : 'transparent', borderBottom: si === 0 ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
+                              <span style={{ fontSize: 11, fontWeight: side.isWin ? 700 : 400, color: side.isWin ? '#FFD700' : side.id ? '#fff' : 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130 }}>
+                                {side.isWin && '✓ '}{getTeamName(side.id)}
+                              </span>
+                              {match.status === 'done' && (
+                                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: side.isWin ? '#FFD700' : 'rgba(255,255,255,0.4)', background: side.isWin ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.08)', padding: '1px 7px', borderRadius: 4 }}>{side.score}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    })
+                  })}
+                </div>
+              </div>
+            )
+          })()}
+        </div>
       )}
 
       {/* TEAM MODAL */}
@@ -493,6 +770,106 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
             <div style={{ display: 'flex', gap: 12 }}>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveScore} disabled={savingMatch}>{savingMatch ? <span className="spinner" /> : 'Simpan Skor'}</button>
               <button className="btn btn-ghost" onClick={() => setShowScoreModal(false)}>Batal</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* KO SETUP MODAL */}
+      {showKoSetup && (
+        <div className="modal-overlay" onClick={() => setShowKoSetup(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+            <h2>SETUP BRACKET KNOCKOUT</h2>
+            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 16, fontSize: 14 }}>Pilih tim yang lolos ke fase knockout:</p>
+            {getSuggestedKoTeams().length > 0 && (
+              <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#4ade80' }}>
+                ✓ Otomatis dipilih: Juara & Runner-up setiap pool
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
+              {teams.map(team => {
+                const isSelected = selectedKoTeams.some(t => t.id === team.id)
+                const sug = getSuggestedKoTeams().find(s => s.team.id === team.id)
+                return (
+                  <div key={team.id}
+                    onClick={() => setSelectedKoTeams(prev => prev.some(t => t.id === team.id) ? prev.filter(t => t.id !== team.id) : [...prev, team])}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, cursor: 'pointer', border: `1px solid ${isSelected ? '#FFD700' : 'rgba(255,255,255,0.15)'}`, background: isSelected ? 'rgba(255,215,0,0.08)' : 'rgba(255,255,255,0.03)' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${isSelected ? '#FFD700' : 'rgba(255,255,255,0.3)'}`, background: isSelected ? '#FFD700' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#1a0a2e', fontWeight: 700 }}>{isSelected && '✓'}</div>
+                      <span style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400, color: isSelected ? '#FFD700' : '#fff' }}>{team.name}</span>
+                    </div>
+                    {sug && <span style={{ fontSize: 11, color: '#4ade80', fontFamily: 'var(--font-mono)' }}>{sug.label}</span>}
+                  </div>
+                )
+              })}
+            </div>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>{selectedKoTeams.length} tim dipilih</p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={setupKnockout}>Buat Bracket</button>
+              <button className="btn btn-ghost" onClick={() => setShowKoSetup(false)}>Batal</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* KO SCORE MODAL */}
+      {showKoScoreModal && koEditMatch && (
+        <div className="modal-overlay" onClick={() => setShowKoScoreModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 580 }}>
+            <h2>INPUT SKOR — {koEditMatch.roundName?.toUpperCase()}</h2>
+            <div style={{ background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.3)', borderRadius: 8, padding: '8px 14px', marginBottom: 16, fontSize: 12, color: '#ff9999' }}>
+              ⚠ Knockout: menang 2 regu sudah cukup untuk lolos. Tidak perlu isi semua regu jika sudah ada pemenang.
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,215,0,0.08)', borderRadius: 8, marginBottom: 16 }}>
+              <span style={{ fontWeight: 700, color: '#FFD700', fontSize: 15 }}>{getTeamName(koEditMatch.homeId)}</span>
+              <span style={{ color: 'rgba(255,255,255,0.4)' }}>vs</span>
+              <span style={{ fontWeight: 700, color: '#FFD700', fontSize: 15 }}>{getTeamName(koEditMatch.awayId)}</span>
+            </div>
+
+            {[0, 1, 2].map(si => (
+              <SubMatchInput
+                key={si}
+                label={`REGU ${si + 1}`}
+                homeTeam={getSubName(koEditMatch.homeId, si + 1)}
+                awayTeam={getSubName(koEditMatch.awayId, si + 1)}
+                sets={koSubSets[si]}
+                onChange={newSets => {
+                  const updated = [...koSubSets]
+                  updated[si] = newSets
+                  setKoSubSets(updated)
+                }}
+              />
+            ))}
+
+            {/* Live summary */}
+            {(() => {
+              const subs = [{ sets: koSubSets[0] }, { sets: koSubSets[1] }, { sets: koSubSets[2] }]
+              const { homeWins: hw, awayWins: aw } = calcTeamMatchResult(subs)
+              const hasData = koSubSets.some(s => s.some(x => x?.home !== '' && x?.home !== undefined))
+              if (!hasData) return null
+              return (
+                <div style={{ padding: '12px 16px', background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 8, marginBottom: 14, textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)', marginBottom: 4 }}>HASIL TIM</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 18, color: '#FFD700' }}>
+                    {getTeamName(koEditMatch.homeId)} {hw} — {aw} {getTeamName(koEditMatch.awayId)}
+                  </div>
+                  {hw !== aw && (
+                    <div style={{ fontSize: 12, color: '#4ade80', marginTop: 4 }}>
+                      Pemenang: {hw > aw ? getTeamName(koEditMatch.homeId) : getTeamName(koEditMatch.awayId)} → maju ke babak berikutnya
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}><label>Tanggal</label><input type="date" value={matchDate} onChange={e => setMatchDate(e.target.value)} /></div>
+              <div className="form-group" style={{ marginBottom: 0 }}><label>Waktu</label><input type="time" value={matchTime} onChange={e => setMatchTime(e.target.value)} /></div>
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveKoScore} disabled={savingMatch}>{savingMatch ? <span className="spinner" /> : 'Simpan & Lanjutkan'}</button>
+              <button className="btn btn-ghost" onClick={() => setShowKoScoreModal(false)}>Batal</button>
             </div>
           </div>
         </div>
