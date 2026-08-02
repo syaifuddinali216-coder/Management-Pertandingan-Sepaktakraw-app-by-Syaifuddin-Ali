@@ -23,11 +23,11 @@ export default function Events() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Hapus event ini? Semua data di dalamnya akan ikut terhapus.')) return
+    if (!confirm('Delete this event? All data inside will also be deleted.')) return
     await deleteEvent(id)
   }
 
-  const statusLabel = { persiapan: 'Persiapan', berlangsung: 'Berlangsung', selesai: 'Selesai' }
+  const statusLabel = { persiapan: 'Preparation', berlangsung: 'Ongoing', selesai: 'Finished' }
   const statusBadge = { persiapan: 'badge-gray', berlangsung: 'badge-green', selesai: 'badge-gold' }
 
   return (
@@ -37,7 +37,7 @@ export default function Events() {
           <div className="tag-line" style={{ marginBottom: 8 }}>Manajemen</div>
           <h1 style={{ fontSize: 48, color: 'var(--gold)' }}>DAFTAR EVENT</h1>
         </div>
-        <button className="btn btn-primary" onClick={openAdd}>+ Buat Event Baru</button>
+        <button className="btn btn-primary" onClick={openAdd}>+ + New Event</button>
       </div>
 
       {loading ? (
@@ -45,8 +45,8 @@ export default function Events() {
       ) : events.length === 0 ? (
         <div className="card empty-state">
           <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
-          <p>Belum ada event turnamen.</p>
-          <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={openAdd}>+ Buat Event Pertama</button>
+          <p>No events yet.</p>
+          <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={openAdd}>+ Create First Event</button>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -68,7 +68,7 @@ export default function Events() {
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                   <button className="btn btn-primary" style={{ padding: '7px 16px', fontSize: 13 }} onClick={() => navigate('event-detail', ev.id)}>Buka</button>
                   <button className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 13 }} onClick={() => openEdit(ev)}>Edit</button>
-                  <button className="btn btn-danger" style={{ padding: '7px 14px', fontSize: 13 }} onClick={() => remove(ev.id)}>Hapus</button>
+                  <button className="btn btn-danger" style={{ padding: '7px 14px', fontSize: 13 }} onClick={() => remove(ev.id)}>Delete</button>
                 </div>
               </div>
             </div>
@@ -79,42 +79,42 @@ export default function Events() {
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>{editId ? 'EDIT EVENT' : 'BUAT EVENT BARU'}</h2>
+            <h2>{editId ? 'EDIT EVENT' : 'NEW EVENT'}</h2>
             <div className="form-group">
-              <label>Nama Turnamen / Event *</label>
+              <label>Tournament / Event Name *</label>
               <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Contoh: Kejuaraan Sepak Takraw Nasional 2025" autoFocus />
             </div>
             <div className="form-group">
-              <label>Penyelenggara / Organisasi</label>
+              <label>Organizer / Organization</label>
               <input value={form.organizer} onChange={e => setForm({ ...form, organizer: e.target.value })} placeholder="Contoh: PSTI DKI Jakarta" />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div className="form-group">
-                <label>Lokasi</label>
+                <label>Location</label>
                 <input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="GOR Senayan, Jakarta" />
               </div>
               <div className="form-group">
-                <label>Tanggal Mulai</label>
+                <label>Start Date</label>
                 <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
               </div>
             </div>
             <div className="form-group">
-              <label>Deskripsi (opsional)</label>
-              <textarea rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Keterangan tambahan tentang event..." />
+              <label>Description (optional)</label>
+              <textarea rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Additional information about this event..." />
             </div>
             <div className="form-group">
-              <label>Status Event</label>
+              <label>Event Status</label>
               <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                <option value="persiapan">Persiapan</option>
-                <option value="berlangsung">Berlangsung</option>
-                <option value="selesai">Selesai</option>
+                <option value="persiapan">Preparation</option>
+                <option value="berlangsung">Ongoing</option>
+                <option value="selesai">Finished</option>
               </select>
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving || !form.name.trim()}>
-                {saving ? <span className="spinner" /> : editId ? 'Update Event' : 'Buat Event'}
+                {saving ? <span className="spinner" /> : editId ? 'Update Event' : 'Create Event'}
               </button>
-              <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Batal</button>
+              <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancel</button>
             </div>
           </div>
         </div>
