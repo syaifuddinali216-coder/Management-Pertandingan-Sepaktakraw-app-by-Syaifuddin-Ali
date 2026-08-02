@@ -253,7 +253,7 @@ export default function Schedule({ eventId }) {
     await saveAssignments({ ...assignments, [dayKey]: { ...dayData, slots: newSlots } })
     setSaving(false)
     setEditSlot(null)
-    showToast('Slot berhasil diupdate!')
+    showToast('Slot updated successfully!')
   }
 
   const clearSlot = async (slotIdx, courtIdx) => {
@@ -263,7 +263,7 @@ export default function Schedule({ eventId }) {
       })
     })
     await saveAssignments({ ...assignments, [dayKey]: { ...dayData, slots: newSlots } })
-    showToast('Slot dikosongkan!')
+    showToast('Slot cleared!')
   }
 
   // ── Build kode→nama map dari semua nomor ─────────────────
@@ -293,8 +293,8 @@ export default function Schedule({ eventId }) {
   }
 
   const exportExcel = async () => {
-    if (!schedule || !assignments) return showToast('Belum ada jadwal!')
-    showToast('Membuat Excel jadwal...')
+    if (!schedule || !assignments) return showToast('No schedule yet!')
+    showToast('Generating Excel jadwal...')
     try {
       const XLSX = await import('xlsx')
       const wb = XLSX.utils.book_new()
@@ -315,10 +315,10 @@ export default function Schedule({ eventId }) {
         const nc = schedule.numCourts
 
         const aoa = []
-        aoa.push([`JADWAL PERTANDINGAN — ${event?.name || ''} — HARI ${day}`, ...Array(nc).fill('')])
-        aoa.push([`Tanggal: ${event?.date ? new Date(event.date).toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'}) : `Hari ${day}`}`, ...Array(nc).fill('')])
+        aoa.push([`MATCH SCHEDULE — ${event?.name || ''} — HARI ${day}`, ...Array(nc).fill('')])
+        aoa.push([`Date: ${event?.date ? new Date(event.date).toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'}) : `Hari ${day}`}`, ...Array(nc).fill('')])
         aoa.push(['', ...Array(nc).fill('')])
-        const headerRow = ['Waktu']
+        const headerRow = ['Time']
         for (let c = 1; c <= nc; c++) {
           const nId = cm[`court${c}`]
           const nName = nomors.find(n => n.id === nId)?.name || `Court ${c}`
@@ -370,13 +370,13 @@ export default function Schedule({ eventId }) {
     return (
       <div>
         <div style={{ marginBottom: 32 }}>
-          <div className="tag-line" style={{ marginBottom: 8 }}>Penjadwalan</div>
-          <h1 style={{ fontSize: 48, color: '#FFD700' }}>JADWAL PERTANDINGAN</h1>
+          <div className="tag-line" style={{ marginBottom: 8 }}>Scheduling</div>
+          <h1 style={{ fontSize: 48, color: '#FFD700' }}>MATCH SCHEDULE</h1>
         </div>
         <div className="card empty-state">
           <div style={{ fontSize: 40, marginBottom: 16 }}>📅</div>
-          <p>Pilih event terlebih dahulu dari Daftar Event.</p>
-          <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={() => navigate('events')}>→ Ke Daftar Event</button>
+          <p>Select event terlebih dahulu dari Events.</p>
+          <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={() => navigate('events')}>→ Ke Events</button>
         </div>
       </div>
     )
@@ -389,15 +389,15 @@ export default function Schedule({ eventId }) {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div className="tag-line" style={{ marginBottom: 8 }}>Penjadwalan</div>
-          <h1 style={{ fontSize: 38, color: '#FFD700' }}>JADWAL PERTANDINGAN</h1>
+          <div className="tag-line" style={{ marginBottom: 8 }}>Scheduling</div>
+          <h1 style={{ fontSize: 38, color: '#FFD700' }}>MATCH SCHEDULE</h1>
           <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, marginTop: 4 }}>Event: <strong style={{ color: '#fff' }}>{event.name}</strong></p>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button className="btn btn-primary" onClick={openSetup}>⚙️ {schedule ? 'Edit Setup' : 'Setup Jadwal'}</button>
+          <button className="btn btn-primary" onClick={openSetup}>⚙️ {schedule ? 'Edit Setup' : 'Setup Schedule'}</button>
           {schedule && <button className="btn btn-ghost" onClick={exportExcel}>📊 Export Excel</button>}
           {schedule && assignments && Object.keys(assignments).length > 0 && (
-            <button className="btn btn-danger" style={{ padding: '10px 14px', fontSize: 13 }} onClick={handleResetAll}>🗑️ Reset Semua</button>
+            <button className="btn btn-danger" style={{ padding: '10px 14px', fontSize: 13 }} onClick={handleResetAll}>🗑️ Reset All</button>
           )}
         </div>
       </div>
@@ -405,19 +405,19 @@ export default function Schedule({ eventId }) {
       {!schedule ? (
         <div className="card empty-state">
           <div style={{ fontSize: 40, marginBottom: 16 }}>📅</div>
-          <p>Jadwal belum diatur.</p>
-          <p style={{ fontSize: 13, marginTop: 8 }}>Klik "Setup Jadwal" untuk mengatur hari, lapangan, dan waktu.</p>
-          <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={openSetup}>⚙️ Setup Jadwal Sekarang</button>
+          <p>Schedule not configured.</p>
+          <p style={{ fontSize: 13, marginTop: 8 }}>Klik "Setup Schedule" untuk mengatur hari, lapangan, dan waktu.</p>
+          <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={openSetup}>⚙️ Setup Schedule Sekarang</button>
         </div>
       ) : (
         <div>
           {/* Info cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px,1fr))', gap: 12, marginBottom: 20 }}>
             {[
-              { label: 'Jumlah Hari', value: schedule.numDays, icon: '📅' },
-              { label: 'Jumlah Court', value: schedule.numCourts, icon: '🏟️' },
-              { label: 'Durasi Match', value: `${schedule.duration} mnt`, icon: '⏱️' },
-              { label: 'Jam Main', value: `${schedule.startTime}–${schedule.endTime}`, icon: '🕐' },
+              { label: 'Days', value: schedule.numDays, icon: '📅' },
+              { label: 'Courts', value: schedule.numCourts, icon: '🏟️' },
+              { label: 'Match Duration', value: `${schedule.duration} min`, icon: '⏱️' },
+              { label: 'Playing Hours', value: `${schedule.startTime}–${schedule.endTime}`, icon: '🕐' },
             ].map((s, i) => (
               <div key={i} className="card" style={{ padding: '14px 16px', textAlign: 'center' }}>
                 <div style={{ fontSize: 22, marginBottom: 4 }}>{s.icon}</div>
@@ -441,13 +441,13 @@ export default function Schedule({ eventId }) {
 
           {/* Action bar for this day */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-            <button className="btn btn-primary" style={{ fontSize: 13 }} onClick={openCourtSetup}>🏟️ Atur Lapangan</button>
+            <button className="btn btn-primary" style={{ fontSize: 13 }} onClick={openCourtSetup}>🏟️ Setup Courts</button>
             <button className="btn btn-secondary" style={{ fontSize: 13 }} onClick={handleAutoGenerate} disabled={generating}>
-              {generating ? <span className="spinner" /> : '⚡ Auto-Generate Hari Ini'}
+              {generating ? <span className="spinner" /> : '⚡ Auto-Generate Today'}
             </button>
-            <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={handleResetDay}>🔄 Reset Hari Ini</button>
+            <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={handleResetDay}>🔄 Reset Today</button>
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginLeft: 'auto' }}>
-              Klik sel jadwal untuk edit manual
+              Click schedule cell to edit manually
             </span>
           </div>
 
@@ -459,7 +459,7 @@ export default function Schedule({ eventId }) {
               return (
                 <div key={c} style={{ padding: '10px 12px', background: nomor ? 'rgba(255,215,0,0.12)' : 'rgba(255,255,255,0.05)', border: `1.5px solid ${nomor ? 'rgba(255,215,0,0.4)' : 'rgba(255,255,255,0.15)'}`, borderRadius: 8, textAlign: 'center' }}>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)', marginBottom: 3 }}>COURT {c}</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: nomor ? '#FFD700' : 'rgba(255,255,255,0.35)' }}>{nomor ? nomor.name : 'Belum diatur'}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: nomor ? '#FFD700' : 'rgba(255,255,255,0.35)' }}>{nomor ? nomor.name : 'Not configured'}</div>
                 </div>
               )
             })}
@@ -510,7 +510,7 @@ export default function Schedule({ eventId }) {
                             {ct.note && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{ct.note}</div>}
                           </>
                         ) : (
-                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', textAlign: 'center' }}>+ Klik untuk isi</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', textAlign: 'center' }}>+ Click to fill</div>
                         )}
                       </div>
                     )
@@ -528,7 +528,7 @@ export default function Schedule({ eventId }) {
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 560 }}>
             <h2>SETUP JADWAL</h2>
             <div className="form-group">
-              <label>Jumlah Hari Event</label>
+              <label>Number of Event Days</label>
               <select value={setupForm.numDays} onChange={e => setSetupForm({ ...setupForm, numDays: e.target.value === 'custom' ? 'custom' : parseInt(e.target.value) })}>
                 {DAY_OPTIONS.map(n => <option key={n} value={n}>{n} Hari</option>)}
                 <option value="custom">Lainnya (custom)...</option>
@@ -536,15 +536,15 @@ export default function Schedule({ eventId }) {
               {setupForm.numDays === 'custom' && <input type="number" min="1" placeholder="Jumlah hari" value={setupForm.numDaysCustom} onChange={e => setSetupForm({ ...setupForm, numDaysCustom: e.target.value })} style={{ marginTop: 8 }} />}
             </div>
             <div className="form-group">
-              <label>Jumlah Lapangan / Court</label>
+              <label>Number of Courts</label>
               <input type="number" min="1" max="20" value={setupForm.numCourts} onChange={e => setSetupForm({ ...setupForm, numCourts: parseInt(e.target.value) || 1 })} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <div className="form-group"><label>Jam Mulai</label><input type="time" value={setupForm.startTime} onChange={e => setSetupForm({ ...setupForm, startTime: e.target.value })} /></div>
-              <div className="form-group"><label>Jam Selesai</label><input type="time" value={setupForm.endTime} onChange={e => setSetupForm({ ...setupForm, endTime: e.target.value })} /></div>
+              <div className="form-group"><label>Start Time</label><input type="time" value={setupForm.startTime} onChange={e => setSetupForm({ ...setupForm, startTime: e.target.value })} /></div>
+              <div className="form-group"><label>End Time</label><input type="time" value={setupForm.endTime} onChange={e => setSetupForm({ ...setupForm, endTime: e.target.value })} /></div>
             </div>
             <div className="form-group">
-              <label>Durasi per Pertandingan</label>
+              <label>Match Duration</label>
               <select value={setupForm.duration} onChange={e => setSetupForm({ ...setupForm, duration: e.target.value === 'custom' ? 'custom' : parseInt(e.target.value) })}>
                 {DURATION_OPTIONS.map(d => <option key={d} value={d}>{d} menit</option>)}
                 <option value="custom">Lainnya (custom)...</option>
@@ -554,18 +554,18 @@ export default function Schedule({ eventId }) {
             <div className="form-group">
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                 <input type="checkbox" checked={setupForm.useIshoma} onChange={e => setSetupForm({ ...setupForm, useIshoma: e.target.checked })} style={{ width: 'auto' }} />
-                Gunakan Jeda ISHOMA
+                Use Prayer Break (ISHOMA)
               </label>
             </div>
             {setupForm.useIshoma && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <div className="form-group"><label>ISHOMA Mulai</label><input type="time" value={setupForm.ishomaStart} onChange={e => setSetupForm({ ...setupForm, ishomaStart: e.target.value })} /></div>
-                <div className="form-group"><label>ISHOMA Selesai</label><input type="time" value={setupForm.ishomaEnd} onChange={e => setSetupForm({ ...setupForm, ishomaEnd: e.target.value })} /></div>
+                <div className="form-group"><label>Break Start</label><input type="time" value={setupForm.ishomaStart} onChange={e => setSetupForm({ ...setupForm, ishomaStart: e.target.value })} /></div>
+                <div className="form-group"><label>Break End</label><input type="time" value={setupForm.ishomaEnd} onChange={e => setSetupForm({ ...setupForm, ishomaEnd: e.target.value })} /></div>
               </div>
             )}
             <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSaveSetup} disabled={saving}>{saving ? <span className="spinner" /> : 'Simpan Setup'}</button>
-              <button className="btn btn-ghost" onClick={() => setShowSetup(false)}>Batal</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSaveSetup} disabled={saving}>{saving ? <span className="spinner" /> : 'Save Setup'}</button>
+              <button className="btn btn-ghost" onClick={() => setShowSetup(false)}>Cancel</button>
             </div>
           </div>
         </div>
@@ -575,8 +575,8 @@ export default function Schedule({ eventId }) {
       {showCourtSetup && (
         <div className="modal-overlay" onClick={() => setShowCourtSetup(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>ATUR LAPANGAN — HARI {activeDay}</h2>
-            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 20, fontSize: 14 }}>Pilih nomor pertandingan untuk setiap court di hari ini.</p>
+            <h2>SETUP COURTS — HARI {activeDay}</h2>
+            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 20, fontSize: 14 }}>Select match number untuk setiap court di hari ini.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {Array.from({ length: schedule?.numCourts || 0 }, (_, i) => i + 1).map(c => (
                 <div key={c} className="form-group" style={{ marginBottom: 0 }}>
@@ -589,8 +589,8 @@ export default function Schedule({ eventId }) {
               ))}
             </div>
             <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveCourtSetup}>Simpan</button>
-              <button className="btn btn-ghost" onClick={() => setShowCourtSetup(false)}>Batal</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveCourtSetup}>Save</button>
+              <button className="btn btn-ghost" onClick={() => setShowCourtSetup(false)}>Cancel</button>
             </div>
           </div>
         </div>
@@ -600,12 +600,12 @@ export default function Schedule({ eventId }) {
       {editSlot !== null && (
         <div className="modal-overlay" onClick={() => setEditSlot(null)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
-            <h2>EDIT SLOT JADWAL</h2>
+            <h2>EDIT SCHEDULE SLOT</h2>
             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginBottom: 20 }}>
               Hari {activeDay} · {slots[editSlot.slotIdx]?.time} · Court {editSlot.courtIdx + 1}
             </p>
             <div className="form-group">
-              <label>Nomor Pertandingan</label>
+              <label>Match Number</label>
               <select value={editForm.nomorId} onChange={e => {
                 const nId = e.target.value
                 setEditForm({ ...editForm, nomorId: nId, matchKey: '', homeName: '', awayName: '' })
@@ -622,7 +622,7 @@ export default function Schedule({ eventId }) {
               const getTeamName = id => teams.find(t => t.id === id)?.name || id
               return (
                 <div className="form-group">
-                  <label>Pilih Pertandingan</label>
+                  <label>Select Match</label>
                   <select value={editForm.matchKey} onChange={e => {
                     const mId = e.target.value
                     const match = matches.find(m => m.id === mId)
@@ -646,25 +646,25 @@ export default function Schedule({ eventId }) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label>Tim A (Home)</label>
-                <input value={editForm.homeName} onChange={e => setEditForm({ ...editForm, homeName: e.target.value })} placeholder="Nama tim A" />
+                <label>Team A (Home)</label>
+                <input value={editForm.homeName} onChange={e => setEditForm({ ...editForm, homeName: e.target.value })} placeholder="Team A name" />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label>Tim B (Away)</label>
-                <input value={editForm.awayName} onChange={e => setEditForm({ ...editForm, awayName: e.target.value })} placeholder="Nama tim B" />
+                <label>Team B (Away)</label>
+                <input value={editForm.awayName} onChange={e => setEditForm({ ...editForm, awayName: e.target.value })} placeholder="Team B name" />
               </div>
             </div>
             <div className="form-group" style={{ marginTop: 14 }}>
-              <label>Catatan (opsional)</label>
+              <label>Notes (optional)</label>
               <input value={editForm.note} onChange={e => setEditForm({ ...editForm, note: e.target.value })} placeholder="Contoh: Match penting, dll" />
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveEditSlot} disabled={saving}>
-                {saving ? <span className="spinner" /> : 'Simpan'}
+                {saving ? <span className="spinner" /> : 'Save'}
               </button>
-              <button className="btn btn-danger" style={{ padding: '10px 14px' }} onClick={() => { clearSlot(editSlot.slotIdx, editSlot.courtIdx); setEditSlot(null) }}>Kosongkan</button>
-              <button className="btn btn-ghost" onClick={() => setEditSlot(null)}>Batal</button>
+              <button className="btn btn-danger" style={{ padding: '10px 14px' }} onClick={() => { clearSlot(editSlot.slotIdx, editSlot.courtIdx); setEditSlot(null) }}>Clear</button>
+              <button className="btn btn-ghost" onClick={() => setEditSlot(null)}>Cancel</button>
             </div>
           </div>
         </div>
