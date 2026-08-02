@@ -47,7 +47,7 @@ const calcTeamTotals = (subMatches) => {
   return { setW, setL, ptsW, ptsL }
 }
 
-// Klasemen team event — lengkap dengan tiebreaker
+// Standings team event — lengkap dengan tiebreaker
 function calcTeamStandings(teams, matches) {
   const tbl = {}
   teams.forEach(t => tbl[t.id] = { team: t, P: 0, W: 0, L: 0, SubW: 0, SubL: 0, SetW: 0, SetL: 0, PtsW: 0, PtsL: 0, Pts: 0 })
@@ -118,7 +118,7 @@ function SubMatchInput({ label, homeTeam, awayTeam, sets, onChange }) {
         if (!hasData) return null
         return (
           <div style={{ fontSize: 11, color: hw > aw ? '#4ade80' : aw > hw ? '#ff9999' : 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)', marginTop: 4, textAlign: 'center' }}>
-            Hasil set: {hw} — {aw} {hw > aw ? `(${homeTeam} menang)` : aw > hw ? `(${awayTeam} menang)` : '(Draw)'}
+            Set result: {hw} — {aw} {hw > aw ? `(${homeTeam} menang)` : aw > hw ? `(${awayTeam} menang)` : '(Draw)'}
           </div>
         )
       })()}
@@ -164,7 +164,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
   const openEditTeam = (t) => { setTeamForm({ name: t.name, origin: t.origin || '', coach: t.coach || '', code: t.code || '' }); setEditTeamId(t.id); setShowTeamModal(true) }
 
   const saveTeam = async () => {
-    if (!teamForm.name.trim()) return showToast('Nama tim wajib!')
+    if (!teamForm.name.trim()) return showToast('Team name is required!')
     setSavingTeam(true)
     if (editTeamId) await updateTeam(editTeamId, teamForm)
     else await addTeam(teamForm)
@@ -173,13 +173,13 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
   }
 
   const removeTeam = async (id) => {
-    if (!confirm('Hapus tim ini?')) return
-    await deleteTeam(id); showToast('Tim dihapus.')
+    if (!confirm('Delete this team?')) return
+    await deleteTeam(id); showToast('Team deleted.')
   }
 
   // ── Group Setup ───────────────────────────────────────────
   const setupGroups = async () => {
-    if (teams.length < 2) return showToast('Minimal 2 tim!')
+    if (teams.length < 2) return showToast('Minimum 2 teams required!')
     const extractPoolLetter = (code) => {
       if (!code) return null
       const match = code.toUpperCase().match(/\b([A-Z])\d+$/)
@@ -228,7 +228,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
       }
     }
     setShowGroupSetup(false)
-    showToast(`Pool berhasil dibuat!`)
+    showToast(`Pools created successfully!`)
     setTab('groups')
   }
 
@@ -252,7 +252,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
     setSavingMatch(true)
     await updateMatch(editMatch.id, { subMatches, date: matchDate, time: matchTime, status: 'done', homeTeamWins: hw, awayTeamWins: aw, winnerId })
     setSavingMatch(false); setShowScoreModal(false)
-    showToast('Skor tersimpan!')
+    showToast('Score saved!')
   }
 
   const koMatches = matches.filter(m => m.phase === 'knockout')
@@ -279,7 +279,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
   }
 
   const setupKnockout = async () => {
-    if (selectedKoTeams.length < 2) return showToast('Pilih minimal 2 tim!')
+    if (selectedKoTeams.length < 2) return showToast('Select at least 2 teams!')
     const n = selectedKoTeams.length
     const pow2 = [2,4,8,16,32,64].find(p => p >= n) || 64
     const teamList = [...selectedKoTeams]
@@ -308,11 +308,11 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
       }
     }
     setShowKoSetup(false)
-    showToast('Bracket knockout berhasil dibuat!')
+    showToast('Knockout bracket created successfully!')
   }
 
   const openKoScore = (match) => {
-    if (!match.homeId || !match.awayId) return showToast('Tunggu hasil babak sebelumnya!')
+    if (!match.homeId || !match.awayId) return showToast('Wait for previous round results!')
     setKoEditMatch(match)
     setKoSubSets((match.subMatches || [{sets:[{},{},{}]},{sets:[{},{},{}]},{sets:[{},{},{}]}]).map(s => s.sets || [{},{},{}]))
     setMatchDate(match.date || '')
@@ -327,7 +327,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
       { label: 'Regu 3', sets: koSubSets[2] },
     ]
     const { homeWins: hw, awayWins: aw } = calcTeamMatchResult(subMatches)
-    if (hw === aw) return showToast('Tidak boleh seri di knockout! Lanjutkan regu ke-3.')
+    if (hw === aw) return showToast('No draws allowed in knockout! Lanjutkan regu ke-3.')
     const winnerId = hw > aw ? koEditMatch.homeId : koEditMatch.awayId
     setSavingMatch(true)
     await updateMatch(koEditMatch.id, { subMatches, date: matchDate, time: matchTime, status: 'done', homeTeamWins: hw, awayTeamWins: aw, winnerId })
@@ -340,12 +340,12 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
     }
     setSavingMatch(false)
     setShowKoScoreModal(false)
-    showToast(koEditMatch.round === 1 ? '🏆 Selesai! Juara telah ditentukan.' : 'Skor knockout tersimpan!')
+    showToast(koEditMatch.round === 1 ? '🏆 Selesai! Champion telah ditentukan.' : 'Knockout score saved!')
   }
 
   const tabs = [
-    { id: 'teams', label: '🏅 Tim Peserta' },
-    { id: 'groups', label: '📊 Pool / Grup' },
+    { id: 'teams', label: '🏅 Teams' },
+    { id: 'groups', label: '📊 Pool / Group' },
     { id: 'knockout', label: '🏆 Knockout' },
   ]
 
@@ -369,7 +369,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
             Setiap match = 3 pertandingan regu (Tim A1 vs B1, A2 vs B2, A3 vs B3)
           </p>
         </div>
-        {tab === 'teams' && <button className="btn btn-primary" onClick={openAddTeam}>+ Tambah Tim</button>}
+        {tab === 'teams' && <button className="btn btn-primary" onClick={openAddTeam}>+ Add Team</button>}
         {tab === 'groups' && <button className="btn btn-primary" onClick={() => setShowGroupSetup(true)}>⚙️ Setup Pool</button>}
       </div>
 
@@ -391,13 +391,13 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
           <div className="card empty-state">
             <div style={{ fontSize: 40 }}>🏅</div>
             <p style={{ marginTop: 12 }}>Belum ada tim terdaftar.</p>
-            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={openAddTeam}>+ Tambah Tim Pertama</button>
+            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={openAddTeam}>+ Add Team Pertama</button>
           </div>
         ) : (
           <div className="card">
             <div style={{ marginBottom: 14, fontSize: 12, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: 1 }}>{teams.length} tim terdaftar</div>
             <table>
-              <thead><tr><th>#</th><th>Kode</th><th>Nama Tim</th><th>Asal</th><th>Pelatih</th><th>Sub-Tim</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>#</th><th>Kode</th><th>Team Name</th><th>Asal</th><th>Coach</th><th>Sub-Tim</th><th>Aksi</th></tr></thead>
               <tbody>
                 {teams.map((t, i) => (
                   <tr key={t.id}>
@@ -409,7 +409,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                     <td style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)' }}>{t.name} 1, {t.name} 2, {t.name} 3</td>
                     <td><div style={{ display: 'flex', gap: 8 }}>
                       <button className="btn btn-ghost" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => openEditTeam(t)}>Edit</button>
-                      <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => removeTeam(t.id)}>Hapus</button>
+                      <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => removeTeam(t.id)}>Delete</button>
                     </div></td>
                   </tr>
                 ))}
@@ -427,7 +427,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
             <p style={{ marginTop: 12 }}>Pool belum dibuat.</p>
             {teams.length >= 2
               ? <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => setShowGroupSetup(true)}>⚙️ Setup Pool</button>
-              : <p style={{ fontSize: 13, marginTop: 8 }}>Tambahkan minimal 2 tim terlebih dahulu.</p>}
+              : <p style={{ fontSize: 13, marginTop: 8 }}>Addkan minimal 2 tim terlebih dahulu.</p>}
           </div>
         ) : (
           <div>
@@ -439,9 +439,9 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                 <div key={grp.id} style={{ marginBottom: 28 }}>
                   <div style={{ fontSize: 22, fontFamily: 'var(--font-display)', color: '#FFD700', marginBottom: 14, padding: '10px 18px', background: 'rgba(255,215,0,0.08)', borderRadius: 8, borderLeft: '4px solid #FFD700', display: 'inline-block', letterSpacing: 1 }}>{grp.name}</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-                    {/* Klasemen */}
+                    {/* Standings */}
                     <div className="card">
-                      <div className="tag-line" style={{ marginBottom: 12, fontSize: 10 }}>Klasemen</div>
+                      <div className="tag-line" style={{ marginBottom: 12, fontSize: 10 }}>Standings</div>
                       <table>
                         <thead><tr><th>#</th><th>Tim</th><th>P</th><th>M</th><th>K</th><th>Regu+</th><th>Regu-</th><th>ΔR</th><th>Set+</th><th>Set-</th><th>ΔS</th><th>Pts</th></tr></thead>
                         <tbody>
@@ -470,7 +470,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                     </div>
                     {/* Matches */}
                     <div className="card">
-                      <div className="tag-line" style={{ marginBottom: 12, fontSize: 10 }}>Jadwal & Hasil</div>
+                      <div className="tag-line" style={{ marginBottom: 12, fontSize: 10 }}>Schedule & Results</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {grpMatches.map(match => {
                           const { homeWins: hw, awayWins: aw } = calcTeamMatchResult(match.subMatches || [])
@@ -532,12 +532,12 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
             const juara3 = semis.map(m => m.winnerId === m.homeId ? m.awayId : m.homeId)
             return (
               <div style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05))', border: '2px solid #FFD700', borderRadius: 14, padding: '16px 20px', marginBottom: 20 }}>
-                <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: '#FFD700', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, fontWeight: 700 }}>🏆 Hasil Akhir</div>
+                <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: '#FFD700', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, fontWeight: 700 }}>🏆 Final Results</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 10 }}>
                   {[
-                    { medal: '🥇', label: 'JUARA I', id: koChampion },
-                    { medal: '🥈', label: 'JUARA II', id: runnerUp },
-                    ...juara3.map(id => ({ medal: '🥉', label: 'JUARA III', id })),
+                    { medal: '🥇', label: '1ST PLACE', id: koChampion },
+                    { medal: '🥈', label: '1ST PLACEI', id: runnerUp },
+                    ...juara3.map(id => ({ medal: '🥉', label: '1ST PLACEII', id })),
                   ].filter(j => j.id).map((j, i) => (
                     <div key={i} style={{ background: '#FFD700', border: '2px solid #B8860B', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 22 }}>{j.medal}</span>
@@ -664,17 +664,17 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
       {showTeamModal && (
         <div className="modal-overlay" onClick={() => setShowTeamModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>{editTeamId ? 'EDIT TIM' : 'TAMBAH TIM'}</h2>
+            <h2>{editTeamId ? 'EDIT TEAM' : 'ADD TEAM'}</h2>
             <div style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
-              ⭐ Sub-tim otomatis: <strong style={{ color: '#FFD700' }}>[Nama Tim] 1</strong>, <strong style={{ color: '#FFD700' }}>[Nama Tim] 2</strong>, <strong style={{ color: '#FFD700' }}>[Nama Tim] 3</strong>
+              ⭐ Sub-tim otomatis: <strong style={{ color: '#FFD700' }}>[Team Name] 1</strong>, <strong style={{ color: '#FFD700' }}>[Team Name] 2</strong>, <strong style={{ color: '#FFD700' }}>[Team Name] 3</strong>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <div className="form-group" style={{ marginBottom: 0 }}><label>Nama Tim *</label><input value={teamForm.name} onChange={e => setTeamForm({ ...teamForm, name: e.target.value })} placeholder="Contoh: Jakarta" autoFocus /></div>
-              <div className="form-group" style={{ marginBottom: 0 }}><label>🏷️ Kode Tim</label><input value={teamForm.code} onChange={e => setTeamForm({ ...teamForm, code: e.target.value.toUpperCase() })} placeholder="A1, B2..." style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }} /></div>
+              <div className="form-group" style={{ marginBottom: 0 }}><label>Team Name *</label><input value={teamForm.name} onChange={e => setTeamForm({ ...teamForm, name: e.target.value })} placeholder="Contoh: Jakarta" autoFocus /></div>
+              <div className="form-group" style={{ marginBottom: 0 }}><label>🏷️ Team Code</label><input value={teamForm.code} onChange={e => setTeamForm({ ...teamForm, code: e.target.value.toUpperCase() })} placeholder="A1, B2..." style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }} /></div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 14 }}>
-              <div className="form-group" style={{ marginBottom: 0 }}><label>Asal Daerah</label><input value={teamForm.origin} onChange={e => setTeamForm({ ...teamForm, origin: e.target.value })} placeholder="Provinsi/Kota" /></div>
-              <div className="form-group" style={{ marginBottom: 0 }}><label>Pelatih</label><input value={teamForm.coach} onChange={e => setTeamForm({ ...teamForm, coach: e.target.value })} placeholder="Nama pelatih" /></div>
+              <div className="form-group" style={{ marginBottom: 0 }}><label>Region / Country</label><input value={teamForm.origin} onChange={e => setTeamForm({ ...teamForm, origin: e.target.value })} placeholder="Provinsi/Kota" /></div>
+              <div className="form-group" style={{ marginBottom: 0 }}><label>Coach</label><input value={teamForm.coach} onChange={e => setTeamForm({ ...teamForm, coach: e.target.value })} placeholder="Nama pelatih" /></div>
             </div>
             {teamForm.name && (
               <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(255,215,0,0.06)', borderRadius: 8, fontSize: 12 }}>
@@ -685,8 +685,8 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
               </div>
             )}
             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveTeam} disabled={savingTeam}>{savingTeam ? <span className="spinner" /> : editTeamId ? 'Update Tim' : 'Tambah Tim'}</button>
-              <button className="btn btn-ghost" onClick={() => setShowTeamModal(false)}>Batal</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveTeam} disabled={savingTeam}>{savingTeam ? <span className="spinner" /> : editTeamId ? 'Update Tim' : 'Add Team'}</button>
+              <button className="btn btn-ghost" onClick={() => setShowTeamModal(false)}>Cancel</button>
             </div>
           </div>
         </div>
@@ -697,16 +697,16 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
         <div className="modal-overlay" onClick={() => setShowGroupSetup(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>SETUP POOL</h2>
-            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 20, fontSize: 14 }}>{teams.length} tim akan dibagi ke dalam pool.</p>
+            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 20, fontSize: 14 }}>{teams.length} teams will be divided into pools.</p>
             <div className="form-group">
-              <label>Jumlah Pool</label>
+              <label>Number of Pools</label>
               <select value={numGroups} onChange={e => setNumGroups(parseInt(e.target.value))}>
                 {[1,2,3,4,5,6,7,8].filter(n => n <= teams.length).map(n => <option key={n} value={n}>{n} Pool</option>)}
               </select>
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={setupGroups}>Buat Pool</button>
-              <button className="btn btn-ghost" onClick={() => setShowGroupSetup(false)}>Batal</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={setupGroups}>Create Pools</button>
+              <button className="btn btn-ghost" onClick={() => setShowGroupSetup(false)}>Cancel</button>
             </div>
           </div>
         </div>
@@ -716,7 +716,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
       {showScoreModal && editMatch && (
         <div className="modal-overlay" onClick={() => setShowScoreModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 580 }}>
-            <h2>INPUT SKOR TEAM EVENT</h2>
+            <h2>INPUT SCORE - TEAM EVENT</h2>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,215,0,0.08)', borderRadius: 8, marginBottom: 16 }}>
               <span style={{ fontWeight: 700, color: '#FFD700', fontSize: 15 }}>{getTeamName(editMatch.homeId)}</span>
               <span style={{ color: 'rgba(255,255,255,0.4)' }}>vs</span>
@@ -763,13 +763,13 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
             })()}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-              <div className="form-group" style={{ marginBottom: 0 }}><label>Tanggal</label><input type="date" value={matchDate} onChange={e => setMatchDate(e.target.value)} /></div>
-              <div className="form-group" style={{ marginBottom: 0 }}><label>Waktu</label><input type="time" value={matchTime} onChange={e => setMatchTime(e.target.value)} /></div>
+              <div className="form-group" style={{ marginBottom: 0 }}><label>Date</label><input type="date" value={matchDate} onChange={e => setMatchDate(e.target.value)} /></div>
+              <div className="form-group" style={{ marginBottom: 0 }}><label>Time</label><input type="time" value={matchTime} onChange={e => setMatchTime(e.target.value)} /></div>
             </div>
 
             <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveScore} disabled={savingMatch}>{savingMatch ? <span className="spinner" /> : 'Simpan Skor'}</button>
-              <button className="btn btn-ghost" onClick={() => setShowScoreModal(false)}>Batal</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveScore} disabled={savingMatch}>{savingMatch ? <span className="spinner" /> : 'Save Score'}</button>
+              <button className="btn btn-ghost" onClick={() => setShowScoreModal(false)}>Cancel</button>
             </div>
           </div>
         </div>
@@ -779,11 +779,11 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
       {showKoSetup && (
         <div className="modal-overlay" onClick={() => setShowKoSetup(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
-            <h2>SETUP BRACKET KNOCKOUT</h2>
-            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 16, fontSize: 14 }}>Pilih tim yang lolos ke fase knockout:</p>
+            <h2>SETUP KNOCKOUT BRACKET</h2>
+            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 16, fontSize: 14 }}>Select teams advancing to knockout:</p>
             {getSuggestedKoTeams().length > 0 && (
               <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#4ade80' }}>
-                ✓ Otomatis dipilih: Juara & Runner-up setiap pool
+                ✓ Auto-selected: Top 2 from each pool
               </div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
@@ -804,10 +804,10 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                 )
               })}
             </div>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>{selectedKoTeams.length} tim dipilih</p>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>{selectedKoTeams.length} teams selected</p>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={setupKnockout}>Buat Bracket</button>
-              <button className="btn btn-ghost" onClick={() => setShowKoSetup(false)}>Batal</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={setupKnockout}>Create Bracket</button>
+              <button className="btn btn-ghost" onClick={() => setShowKoSetup(false)}>Cancel</button>
             </div>
           </div>
         </div>
@@ -856,7 +856,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                   </div>
                   {hw !== aw && (
                     <div style={{ fontSize: 12, color: '#4ade80', marginTop: 4 }}>
-                      Pemenang: {hw > aw ? getTeamName(koEditMatch.homeId) : getTeamName(koEditMatch.awayId)} → maju ke babak berikutnya
+                      Pemenang: {hw > aw ? getTeamName(koEditMatch.homeId) : getTeamName(koEditMatch.awayId)} → advances to the next round
                     </div>
                   )}
                 </div>
@@ -864,12 +864,12 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
             })()}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-              <div className="form-group" style={{ marginBottom: 0 }}><label>Tanggal</label><input type="date" value={matchDate} onChange={e => setMatchDate(e.target.value)} /></div>
-              <div className="form-group" style={{ marginBottom: 0 }}><label>Waktu</label><input type="time" value={matchTime} onChange={e => setMatchTime(e.target.value)} /></div>
+              <div className="form-group" style={{ marginBottom: 0 }}><label>Date</label><input type="date" value={matchDate} onChange={e => setMatchDate(e.target.value)} /></div>
+              <div className="form-group" style={{ marginBottom: 0 }}><label>Time</label><input type="time" value={matchTime} onChange={e => setMatchTime(e.target.value)} /></div>
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveKoScore} disabled={savingMatch}>{savingMatch ? <span className="spinner" /> : 'Simpan & Lanjutkan'}</button>
-              <button className="btn btn-ghost" onClick={() => setShowKoScoreModal(false)}>Batal</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveKoScore} disabled={savingMatch}>{savingMatch ? <span className="spinner" /> : 'Save & Continue'}</button>
+              <button className="btn btn-ghost" onClick={() => setShowKoScoreModal(false)}>Cancel</button>
             </div>
           </div>
         </div>
