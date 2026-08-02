@@ -4,9 +4,9 @@ import { useNav } from '../pages/MainApp.jsx'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '⚡' },
-  { id: 'events', label: 'Daftar Event', icon: '📋' },
-  { id: 'schedule', label: 'Jadwal', icon: '📅' },
-  { id: 'reports', label: 'Rekap Hasil', icon: '📊' },
+  { id: 'events', label: 'Events', icon: '📋' },
+  { id: 'schedule', label: 'Schedule', icon: '📅' },
+  { id: 'reports', label: 'Results', icon: '📊' },
 ]
 
 export default function Sidebar({ currentPage, onLogout }) {
@@ -21,23 +21,14 @@ export default function Sidebar({ currentPage, onLogout }) {
       display: 'flex', flexDirection: 'column', flexShrink: 0,
       boxShadow: '4px 0 30px rgba(0,0,0,0.4)',
     }}>
-      {/* Brand */}
       <div style={{ padding: '28px 24px 20px', borderBottom: '1px solid rgba(255,215,0,0.12)' }}>
-        <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,215,0,0.5)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
-          Tournament Manager
-        </div>
+        <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,215,0,0.5)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Tournament Manager</div>
         <div style={{ fontSize: 26, fontFamily: 'var(--font-display)', lineHeight: 1.1, letterSpacing: 1 }}>
-          <span style={{ background: 'linear-gradient(135deg, #FFD700, #B8860B)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            SEPAK<br />TAKRAW
-          </span>
+          <span style={{ background: 'linear-gradient(135deg, #FFD700, #B8860B)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SEPAK<br />TAKRAW</span>
         </div>
         <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 6, fontStyle: 'italic' }}>by Syaifuddin Ali</div>
       </div>
-
-      {/* Gold divider */}
-      <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,215,0,0.4), transparent)', margin: '0' }} />
-
-      {/* User */}
+      <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,215,0,0.4), transparent)' }} />
       <div style={{ padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #FFD700, #B8860B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#1a0a2e', flexShrink: 0 }}>
@@ -49,8 +40,6 @@ export default function Sidebar({ currentPage, onLogout }) {
           </div>
         </div>
       </div>
-
-      {/* Nav */}
       <nav style={{ flex: 1, padding: '16px 10px' }}>
         {navItems.map(item => {
           const isActive = currentPage === item.id
@@ -69,17 +58,12 @@ export default function Sidebar({ currentPage, onLogout }) {
               onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,215,0,0.07)'; e.currentTarget.style.color = 'rgba(255,255,255,0.85)' } }}
               onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.55)' } }}
             >
-              <span style={{ fontSize: 17 }}>{item.icon}</span>
-              {item.label}
+              <span style={{ fontSize: 17 }}>{item.icon}</span>{item.label}
             </button>
           )
         })}
       </nav>
-
-      {/* Bottom decoration */}
       <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,215,0,0.2), transparent)' }} />
-
-      {/* Logout */}
       <div style={{ padding: '14px 10px' }}>
         <button onClick={onLogout} style={{
           display: 'flex', alignItems: 'center', gap: 10, width: '100%',
@@ -90,7 +74,7 @@ export default function Sidebar({ currentPage, onLogout }) {
           onMouseEnter={e => { e.currentTarget.style.color = '#ff9999'; e.currentTarget.style.background = 'rgba(255,107,107,0.08)' }}
           onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; e.currentTarget.style.background = 'transparent' }}
         >
-          <span>🚪</span> Keluar
+          <span>🚪</span> Logout
         </button>
       </div>
     </aside>
