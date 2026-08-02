@@ -5,17 +5,17 @@ import NomorDetail from '../components/NomorDetail.jsx'
 import TeamNomorDetail from '../components/TeamNomorDetail.jsx'
 
 const NOMOR_OPTIONS = [
-  'Regu Putra', 'Regu Putri',
-  'Double Putra', 'Double Putri',
-  'Quadrant Putra', 'Quadrant Putri',
+  'Men Regu', 'Women Regu',
+  'Men Double', 'Women Double',
+  'Men Quadrant', 'Women Quadrant',
   '--- TEAM EVENT ---',
-  'Team Regu Putra', 'Team Regu Putri',
-  'Team Double Putra', 'Team Double Putri',
+  'Team Men Regu', 'Team Women Regu',
+  'Team Men Double', 'Team Women Double',
 ]
 
 export const TEAM_EVENT_NOMORS = [
-  'Team Regu Putra', 'Team Regu Putri',
-  'Team Double Putra', 'Team Double Putri',
+  'Team Men Regu', 'Team Women Regu',
+  'Team Men Double', 'Team Women Double',
 ]
 
 const isTeamEvent = (nomorName) => TEAM_EVENT_NOMORS.includes(nomorName)
@@ -27,13 +27,13 @@ export default function EventDetail({ eventId }) {
   const [showModal, setShowModal] = useState(false)
   const [editId, setEditId] = useState(null)
   const [activeNomorId, setActiveNomorId] = useState(null)
-  const [form, setForm] = useState({ name: 'Regu Putra', customName: '', format: 'grup-knockout', pembukaan: '', penutupan: '' })
+  const [form, setForm] = useState({ name: 'Men Regu', customName: '', format: 'grup-knockout', pembukaan: '', penutupan: '' })
   const [saving, setSaving] = useState(false)
 
   const event = events.find(e => e.id === eventId)
 
   const openAdd = () => {
-    setForm({ name: 'Regu Putra', customName: '', format: 'grup-knockout', pembukaan: '', penutupan: '' })
+    setForm({ name: 'Men Regu', customName: '', format: 'grup-knockout', pembukaan: '', penutupan: '' })
     setEditId(null); setShowModal(true)
   }
   const openEdit = (n) => {
@@ -92,7 +92,7 @@ export default function EventDetail({ eventId }) {
           <h1 style={{ fontSize: 36, color: 'var(--gold)', lineHeight: 1.1 }}>{event?.name?.toUpperCase() || 'EVENT'}</h1>
           {event?.location && <p style={{ color: 'var(--gray-600)', fontSize: 13, marginTop: 4 }}>📍 {event.location} {event.date && `· ${new Date(event.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`}</p>}
         </div>
-        <button className="btn btn-primary" onClick={openAdd}>+ Tambah Nomor</button>
+        <button className="btn btn-primary" onClick={openAdd}>+ Add Match Number</button>
       </div>
 
       {loading ? (
@@ -101,8 +101,8 @@ export default function EventDetail({ eventId }) {
         <div className="card empty-state">
           <div style={{ fontSize: 48, marginBottom: 16 }}>🏸</div>
           <p>Belum ada nomor pertandingan.</p>
-          <p style={{ fontSize: 13, marginTop: 8 }}>Tambahkan nomor seperti Regu Putra, Double Putri, dll.</p>
-          <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={openAdd}>+ Tambah Nomor Pertandingan</button>
+          <p style={{ fontSize: 13, marginTop: 8 }}>Tambahkan nomor seperti Men Regu, Women Double, dll.</p>
+          <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={openAdd}>+ Add Match Number Pertandingan</button>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
@@ -119,12 +119,12 @@ export default function EventDetail({ eventId }) {
                 </div>
                 <h2 style={{ fontSize: 22, color: '#fff', marginBottom: 10, letterSpacing: 0.5 }}>{nomor.name.toUpperCase()}</h2>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-                  <span className="badge badge-gray">{nomor.format === 'grup-knockout' ? 'Grup + Knockout' : nomor.format === 'knockout' ? 'Knockout' : 'Round Robin'}</span>
+                  <span className="badge badge-gray">{nomor.format === 'grup-knockout' ? 'Group + Knockout' : nomor.format === 'knockout' ? 'Knockout' : 'Round Robin'}</span>
                   {isTeam && <span className="badge badge-gold">⭐ Team Event</span>}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', padding: '8px', fontSize: 13 }} onClick={() => setActiveNomorId(nomor.id)}>Kelola</button>
+                <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', padding: '8px', fontSize: 13 }} onClick={() => setActiveNomorId(nomor.id)}>Manage</button>
                 <button className="btn btn-ghost" style={{ padding: '8px 12px', fontSize: 13 }} onClick={() => openEdit(nomor)}>✏️</button>
                 <button className="btn btn-danger" style={{ padding: '8px 12px', fontSize: 13 }} onClick={() => remove(nomor.id)}>🗑️</button>
               </div>
@@ -137,9 +137,9 @@ export default function EventDetail({ eventId }) {
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>{editId ? 'EDIT NOMOR' : 'TAMBAH NOMOR'}</h2>
+            <h2>{editId ? 'EDIT MATCH NUMBER' : 'ADD MATCH NUMBER'}</h2>
             <div className="form-group">
-              <label>Nomor Pertandingan</label>
+              <label>Match Number</label>
               <select value={form.name} onChange={e => {
                 const val = e.target.value
                 if (val === '--- TEAM EVENT ---') return
@@ -151,11 +151,11 @@ export default function EventDetail({ eventId }) {
                     {n}
                   </option>
                 ))}
-                <option value="Lainnya">Lainnya (custom)</option>
+                <option value="Lainnya">Other (custom)</option>
               </select>
               {TEAM_EVENT_NOMORS.includes(form.name) && (
                 <div style={{ marginTop: 8, padding: '10px 12px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: 8, fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
-                  ⭐ <strong style={{ color: '#FFD700' }}>Team Event</strong> — Format khusus: setiap match terdiri dari 3 pertandingan regu (Tim A1 vs Tim B1, A2 vs B2, A3 vs B3). Di fase grup semua regu main, di knockout bisa berhenti setelah 2 regu menang.
+                  ⭐ <strong style={{ color: '#FFD700' }}>Team Event</strong> — Format khusus: setiap match terdiri dari 3 pertandingan regu (Tim A1 vs Tim B1, A2 vs B2, A3 vs B3). In group stage all regus play, in knockout can stop after 2 regus win.
                 </div>
               )}
             </div>
@@ -166,10 +166,10 @@ export default function EventDetail({ eventId }) {
               </div>
             )}
             <div className="form-group">
-              <label>Format Pertandingan</label>
+              <label>Competition Format</label>
               <select value={form.format} onChange={e => setForm({ ...form, format: e.target.value })}>
-                <option value="grup-knockout">Grup + Knockout</option>
-                <option value="knockout">Knockout Langsung</option>
+                <option value="grup-knockout">Group + Knockout</option>
+                <option value="knockout">Direct Knockout</option>
                 <option value="round-robin">Round Robin</option>
               </select>
             </div>
@@ -177,7 +177,7 @@ export default function EventDetail({ eventId }) {
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving}>
                 {saving ? <span className="spinner" /> : editId ? 'Update' : 'Tambah'}
               </button>
-              <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Batal</button>
+              <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancel</button>
             </div>
           </div>
         </div>
