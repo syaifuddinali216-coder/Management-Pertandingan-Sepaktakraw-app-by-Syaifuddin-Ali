@@ -25,10 +25,10 @@ export default function AuthPage() {
       const snap = await getDoc(doc(db, 'users', user.uid))
       if (!snap.exists()) {
         // New Google user — need code
-        const code = prompt('Masukkan Kode Kunci untuk mendaftar:')
+        const code = prompt('Sign Inkan Access Code untuk mendaftar:')
         if (code !== SECRET_CODE) {
           await auth.signOut()
-          setError('Kode kunci salah. Hubungi administrator.')
+          setError('Invalid access code. Contact administrator.')
           setLoading(false); return
         }
         await setDoc(doc(db, 'users', user.uid), {
@@ -38,26 +38,26 @@ export default function AuthPage() {
         })
       }
     } catch (e) {
-      setError('Gagal login dengan Google: ' + e.message)
+      setError('Google sign in failed: ' + e.message)
     }
     setLoading(false)
   }
 
   const handleEmailLogin = async () => {
-    if (!form.email || !form.password) return setError('Email dan password wajib diisi.')
+    if (!form.email || !form.password) return setError('Email and password are required.')
     setLoading(true); setError('')
     try {
       await signInWithEmailAndPassword(auth, form.email, form.password)
     } catch (e) {
-      setError('Email atau password salah.')
+      setError('Email or password salah.')
     }
     setLoading(false)
   }
 
   const handleRegister = async () => {
-    if (!form.name || !form.email || !form.password) return setError('Semua field wajib diisi.')
-    if (form.code !== SECRET_CODE) return setError('Kode kunci salah. Hubungi administrator.')
-    if (form.password.length < 6) return setError('Password minimal 6 karakter.')
+    if (!form.name || !form.email || !form.password) return setError('All fields are required.')
+    if (form.code !== SECRET_CODE) return setError('Invalid access code. Contact administrator.')
+    if (form.password.length < 6) return setError('Password must be at least 6 characters.')
     setLoading(true); setError('')
     try {
       const result = await createUserWithEmailAndPassword(auth, form.email, form.password)
@@ -66,8 +66,8 @@ export default function AuthPage() {
         name: form.name, email: form.email, createdAt: new Date().toISOString(),
       })
     } catch (e) {
-      if (e.code === 'auth/email-already-in-use') setError('Email sudah terdaftar.')
-      else setError('Gagal mendaftar: ' + e.message)
+      if (e.code === 'auth/email-already-in-use') setError('Email already registered.')
+      else setError('Registration failed: ' + e.message)
     }
     setLoading(false)
   }
@@ -92,7 +92,7 @@ export default function AuthPage() {
         <div className="card">
           {/* Tab */}
           <div style={{ display: 'flex', gap: 0, marginBottom: 28, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 4 }}>
-            {[['login','Masuk'],['register','Daftar']].map(([m, label]) => (
+            {[['login','Sign In'],['register','Register']].map(([m, label]) => (
               <button key={m} onClick={() => { setMode(m); setError('') }} style={{
                 flex: 1, padding: '8px', border: 'none', borderRadius: 6, cursor: 'pointer',
                 fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 14, transition: 'all 0.2s',
@@ -110,7 +110,7 @@ export default function AuthPage() {
 
           {mode === 'register' && (
             <div className="form-group">
-              <label>Nama Lengkap</label>
+              <label>Full Name</label>
               <input placeholder="Nama kamu" value={form.name} onChange={e => set('name', e.target.value)} />
             </div>
           )}
@@ -122,26 +122,26 @@ export default function AuthPage() {
 
           <div className="form-group">
             <label>Password</label>
-            <input type="password" placeholder={mode === 'register' ? 'Minimal 6 karakter' : 'Password kamu'} value={form.password} onChange={e => set('password', e.target.value)}
+            <input type="password" placeholder={mode === 'register' ? 'Min. 6 characters' : 'Your password'} value={form.password} onChange={e => set('password', e.target.value)}
               onKeyDown={e => e.key === 'Enter' && (mode === 'login' ? handleEmailLogin() : handleRegister())} />
           </div>
 
           {mode === 'register' && (
             <div className="form-group">
-              <label>Kode Kunci</label>
-              <input placeholder="Masukkan kode kunci pendaftaran" value={form.code} onChange={e => set('code', e.target.value)} />
-              <p style={{ fontSize: 11, color: 'var(--gray-600)', marginTop: 4 }}>Hubungi Syaifuddin Ali untuk mendapatkan kode kunci.</p>
+              <label>Access Code</label>
+              <input placeholder="Sign Inkan kode kunci pendaftaran" value={form.code} onChange={e => set('code', e.target.value)} />
+              <p style={{ fontSize: 11, color: 'var(--gray-600)', marginTop: 4 }}>Contact Syaifuddin Ali to obtain the access code.</p>
             </div>
           )}
 
           <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '13px', fontSize: 15, marginBottom: 12 }}
             onClick={mode === 'login' ? handleEmailLogin : handleRegister} disabled={loading}>
-            {loading ? <span className="spinner" /> : mode === 'login' ? 'Masuk' : 'Daftar Sekarang'}
+            {loading ? <span className="spinner" /> : mode === 'login' ? 'Sign In' : 'Register Sekarang'}
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
             <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
-            <span style={{ fontSize: 12, color: 'var(--gray-600)' }}>atau</span>
+            <span style={{ fontSize: 12, color: 'var(--gray-600)' }}>or</span>
             <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
           </div>
 
@@ -160,7 +160,7 @@ export default function AuthPage() {
               <path fill="#FBBC05" d="M4.51 10.53c-.16-.48-.25-.99-.25-1.53s.09-1.05.25-1.53V5.39H1.88A8 8 0 0 0 .98 9c0 1.29.31 2.51.9 3.61l2.63-2.08z"/>
               <path fill="#EA4335" d="M8.98 3.58c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 8.98 1a8 8 0 0 0-7.1 4.39l2.63 2.08c.63-1.89 2.39-3.29 4.47-3.29z"/>
             </svg>
-            {mode === 'login' ? 'Masuk dengan Google' : 'Daftar dengan Google'}
+            {mode === 'login' ? 'Sign In dengan Google' : 'Register dengan Google'}
           </button>
         </div>
 
