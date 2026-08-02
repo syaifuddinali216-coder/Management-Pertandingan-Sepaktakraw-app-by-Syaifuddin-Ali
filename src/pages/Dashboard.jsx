@@ -17,16 +17,16 @@ export default function Dashboard() {
         <div className="tag-line" style={{ marginBottom: 8 }}>Selamat Datang</div>
         <h1 style={{ fontSize: 48, color: 'var(--gold)' }}>DASHBOARD</h1>
         <p style={{ color: 'var(--gray-600)', fontSize: 14, marginTop: 4 }}>
-          Halo, <strong style={{ color: 'var(--white)' }}>{user?.displayName}</strong> 👋 Selamat mengelola turnamen sepak takraw!
+          Hello, <strong style={{ color: 'var(--white)' }}>{user?.displayName}</strong> 👋 Welcome to Sepak Takraw Tournament Manager!
         </p>
       </div>
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
         {[
-          { label: 'Total Event', value: loading ? '...' : events.length, icon: '📋', color: 'var(--green-accent)' },
-          { label: 'Event Aktif', value: loading ? '...' : activeEvents, icon: '⚡', color: 'var(--gold)' },
-          { label: 'Event Selesai', value: loading ? '...' : doneEvents, icon: '✅', color: 'var(--green-bright)' },
+          { label: 'Total Events', value: loading ? '...' : events.length, icon: '📋', color: 'var(--green-accent)' },
+          { label: 'Active Events', value: loading ? '...' : activeEvents, icon: '⚡', color: 'var(--gold)' },
+          { label: 'Finished Events', value: loading ? '...' : doneEvents, icon: '✅', color: 'var(--green-bright)' },
         ].map((s, i) => (
           <div key={i} className="card" style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>{s.icon}</div>
@@ -39,9 +39,9 @@ export default function Dashboard() {
       {/* Recent events */}
       <div className="card" style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 22, color: 'var(--white)' }}>EVENT TERBARU</h2>
+          <h2 style={{ fontSize: 22, color: 'var(--white)' }}>RECENT EVENTS</h2>
           <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: 13 }} onClick={() => navigate('events')}>
-            Lihat Semua
+            View All
           </button>
         </div>
         {loading ? (
@@ -50,7 +50,7 @@ export default function Dashboard() {
           <div className="empty-state">
             <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
             <p>Belum ada event. Buat event pertama kamu!</p>
-            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => navigate('events')}>+ Buat Event Baru</button>
+            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => navigate('events')}>+ Create New Event</button>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -73,7 +73,7 @@ export default function Dashboard() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span className={`badge ${ev.status === 'selesai' ? 'badge-gold' : ev.status === 'berlangsung' ? 'badge-green' : 'badge-gray'}`}>
-                    {ev.status === 'selesai' ? 'Selesai' : ev.status === 'berlangsung' ? 'Berlangsung' : 'Persiapan'}
+                    {ev.status === 'selesai' ? 'Selesai' : ev.status === 'berlangsung' ? 'Ongoing' : 'Preparation'}
                   </span>
                   <span style={{ color: 'var(--gray-600)' }}>›</span>
                 </div>
@@ -85,14 +85,14 @@ export default function Dashboard() {
 
       {/* Quick Guide */}
       <div className="card">
-        <h2 style={{ fontSize: 22, color: 'var(--white)', marginBottom: 20 }}>CARA PENGGUNAAN</h2>
+        <h2 style={{ fontSize: 22, color: 'var(--white)', marginBottom: 20 }}>HOW TO USE</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {[
-            { step: '01', title: 'Buat Event Baru', desc: 'Klik "Daftar Event" → "+ Buat Event". Isi nama turnamen, lokasi, dan tanggal.' },
-            { step: '02', title: 'Tambah Nomor Pertandingan', desc: 'Buka event → tambah nomor (Regu Putra, Double Putri, dll) sesuai kebutuhan.' },
-            { step: '03', title: 'Input Tim & Atlet', desc: 'Per nomor pertandingan, daftarkan kontingen, atlet, manager, dan official.' },
-            { step: '04', title: 'Atur Grup & Jadwal', desc: 'Bagi tim ke dalam pool/grup, lalu input skor per set (maks 15, deuce 17).' },
-            { step: '05', title: 'Generate Laporan PDF', desc: 'Setelah selesai, cetak laporan PDF lengkap dengan cover, hasil, dan statistik.' },
+            { step: '01', title: 'Create New Event', desc: 'Klik "Events" → "+ Buat Event". Isi nama turnamen, lokasi, dan tanggal.' },
+            { step: '02', title: 'Add Match Number', desc: 'Open event → add match number (Men Regu, Women Double, etc.) as needed.' },
+            { step: '03', title: 'Input Teams & Athletes', desc: 'Per match number, register teams, athletes, managers, and officials.' },
+            { step: '04', title: 'Setup Groups & Schedule', desc: 'Divide teams into pools, then input score per set (max 15, deuce 17).' },
+            { step: '05', title: 'Generate Report PDF', desc: 'When done, download Excel results with standings and statistics.' },
           ].map((item, i, arr) => (
             <div key={i} style={{
               display: 'flex', gap: 16, padding: '14px 0',
