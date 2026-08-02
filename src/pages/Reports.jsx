@@ -89,9 +89,9 @@ export default function Reports({ eventId: initialEventId }) {
       const sDataAlt = { ...sData, fill: { fgColor: { rgb: 'FFF5F5' }, patternType: 'solid' } }
       const sDataAltCenter = { ...sDataAlt, alignment: { horizontal: 'center', vertical: 'center' } }
       const sWinner = { font: { bold: true, sz: 10, color: { rgb: DARK } }, fill: { fgColor: { rgb: GOLD }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center' }, border }
-      const sJuara1 = { font: { bold: true, sz: 12, color: { rgb: DARK } }, fill: { fgColor: { rgb: GOLD }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center' }, border: borderBold }
-      const sJuara2 = { font: { bold: true, sz: 11, color: { rgb: WHITE } }, fill: { fgColor: { rgb: '888888' }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center' }, border }
-      const sJuara3 = { font: { bold: true, sz: 11, color: { rgb: WHITE } }, fill: { fgColor: { rgb: 'CD7F32' }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center' }, border }
+      const sChampion1 = { font: { bold: true, sz: 12, color: { rgb: DARK } }, fill: { fgColor: { rgb: GOLD }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center' }, border: borderBold }
+      const sChampion2 = { font: { bold: true, sz: 11, color: { rgb: WHITE } }, fill: { fgColor: { rgb: '888888' }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center' }, border }
+      const sChampion3 = { font: { bold: true, sz: 11, color: { rgb: WHITE } }, fill: { fgColor: { rgb: 'CD7F32' }, patternType: 'solid' }, alignment: { horizontal: 'center', vertical: 'center' }, border }
       const sPoolHeader = { font: { bold: true, sz: 12, color: { rgb: WHITE } }, fill: { fgColor: { rgb: RED }, patternType: 'solid' }, alignment: { horizontal: 'center' }, border }
 
       const setStyle = (ws, ref, style) => {
@@ -124,7 +124,7 @@ export default function Reports({ eventId: initialEventId }) {
           const gName = groupMatches.find(m => m.groupId === gid)?.groupName || gid
           const tids = [...new Set(groupMatches.filter(m => m.groupId === gid).flatMap(m => [m.homeId, m.awayId]))]
           poolAoa.push([gName, '', ''])
-          poolAoa.push(['No', 'Nama Tim / Kontingen', 'Asal Daerah'])
+          poolAoa.push(['No', 'Team Name / Kontingen', 'Region / Country'])
           tids.forEach((tid, i) => {
             const t = getTeam(tid)
             poolAoa.push([i + 1, t?.name || '—', t?.origin || '—'])
@@ -152,9 +152,9 @@ export default function Reports({ eventId: initialEventId }) {
         wsPool['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } }]
         XLSX.utils.book_append_sheet(wb, wsPool, `${ni + 1}.${nomor.name.slice(0, 12)} Pool`)
 
-        // ── SHEET 2: HASIL PERTANDINGAN ──────────────────
+        // ── SHEET 2: MATCH RESULTS ──────────────────
         const hasilAoa = []
-        hasilAoa.push([`HASIL PERTANDINGAN — ${nomor.name.toUpperCase()}`, '', '', '', '', '', '', ''])
+        hasilAoa.push([`MATCH RESULTS — ${nomor.name.toUpperCase()}`, '', '', '', '', '', '', ''])
         hasilAoa.push([`Event: ${event.name}`, '', '', '', '', '', '', ''])
         hasilAoa.push(['', '', '', '', '', '', '', ''])
 
@@ -168,17 +168,17 @@ export default function Reports({ eventId: initialEventId }) {
           const grpMatches = groupMatches.filter(m => m.groupId === gid)
           const standings = calcStandings(grpTeams, grpMatches)
 
-          // Klasemen
-          hasilAoa.push([`KLASEMEN ${gName}`, '', '', '', '', '', '', '']); hr++
-          hasilAoa.push(['#', 'Tim', 'Main', 'Menang', 'Kalah', 'Set +', 'Set -', 'Poin']); hr++
+          // Standings
+          hasilAoa.push([`STANDINGS ${gName}`, '', '', '', '', '', '', '']); hr++
+          hasilAoa.push(['#', 'Tim', 'Main', 'Win', 'Kalah', 'Set +', 'Set -', 'Poin']); hr++
           standings.forEach((row, i) => {
             hasilAoa.push([i + 1, row.name, row.P, row.W, row.L, row.SetW, row.SetL, row.Pts]); hr++
           })
           hasilAoa.push(['', '', '', '', '', '', '', '']); hr++
 
           // Hasil match
-          hasilAoa.push([`HASIL PERTANDINGAN ${gName}`, '', '', '', '', '', '', '']); hr++
-          hasilAoa.push(['Tim A', 'Set 1', 'Set 2', 'Set 3', 'Set', 'Tim B', 'Pemenang', 'Tanggal']); hr++
+          hasilAoa.push([`MATCH RESULTS ${gName}`, '', '', '', '', '', '', '']); hr++
+          hasilAoa.push(['Tim A', 'Set 1', 'Set 2', 'Set 3', 'Set', 'Tim B', 'Pemenang', 'Date']); hr++
           grpMatches.filter(m => m.status === 'done').forEach(m => {
             const s = m.sets || []
             const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(s)
@@ -196,7 +196,7 @@ export default function Reports({ eventId: initialEventId }) {
           rounds.forEach(r => {
             const rMatches = koMatches.filter(m => m.round === r)
             hasilAoa.push([rMatches[0]?.roundName || `Babak ${r}`, '', '', '', '', '', '', '']); hr++
-            hasilAoa.push(['Tim A', 'Set 1', 'Set 2', 'Set 3', 'Set', 'Tim B', 'Pemenang', 'Tanggal']); hr++
+            hasilAoa.push(['Tim A', 'Set 1', 'Set 2', 'Set 3', 'Set', 'Tim B', 'Pemenang', 'Date']); hr++
             rMatches.forEach(m => {
               const s = m.sets || []
               const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(s)
@@ -219,7 +219,7 @@ export default function Reports({ eventId: initialEventId }) {
         hasilAoa.forEach((row, idx) => {
           const r = idx + 1
           const v = row[0]?.toString() || ''
-          if (v.startsWith('KLASEMEN') || v.startsWith('HASIL PERTANDINGAN') || v.startsWith('HASIL KNOCKOUT') || v.match(/^(Final|Semifinal|Perempat|Babak)/)) {
+          if (v.startsWith('STANDINGS') || v.startsWith('MATCH RESULTS') || v.startsWith('HASIL KNOCKOUT') || v.match(/^(Final|Semifinal|Perempat|Babak)/)) {
             applyRowStyle(wsHasil, r, HCOLS, sSubHeader)
           } else if (v === '#' || v === 'Tim A') {
             applyRowStyle(wsHasil, r, HCOLS, sHeader)
@@ -236,7 +236,7 @@ export default function Reports({ eventId: initialEventId }) {
 
         XLSX.utils.book_append_sheet(wb, wsHasil, `${ni + 1}.${nomor.name.slice(0, 12)} Hasil`)
 
-        // ── SHEET 3: DAFTAR PEMENANG ─────────────────────
+        // ── SHEET 3: WINNERS LIST ─────────────────────
         const koFinal = koMatches.find(m => m.round === 1)
         let juara1 = '—', juara2 = '—', juara3a = '—', juara3b = '—'
         if (koFinal) {
@@ -252,14 +252,14 @@ export default function Reports({ eventId: initialEventId }) {
         }
 
         const pAoa = [
-          [`DAFTAR PEMENANG — ${nomor.name.toUpperCase()}`, ''],
+          [`WINNERS LIST — ${nomor.name.toUpperCase()}`, ''],
           [`Event: ${event.name}`, ''],
           ['', ''],
-          ['Peringkat', 'Nama Tim'],
-          ['🥇 JUARA I', juara1],
-          ['🥈 JUARA II', juara2],
-          ['🥉 JUARA III (Bersama)', juara3a],
-          ['🥉 JUARA III (Bersama)', juara3b],
+          ['Rank', 'Team Name'],
+          ['🥇 1ST PLACE', juara1],
+          ['🥈 1ST PLACEI', juara2],
+          ['🥉 1ST PLACEII (Bersama)', juara3a],
+          ['🥉 1ST PLACEII (Bersama)', juara3b],
         ]
         const wsPemenang = XLSX.utils.aoa_to_sheet(pAoa)
         wsPemenang['!cols'] = [{ wch: 25 }, { wch: 40 }]
@@ -267,18 +267,18 @@ export default function Reports({ eventId: initialEventId }) {
         setStyle(wsPemenang, 'A1', sTitle); setStyle(wsPemenang, 'B1', sTitle)
         setStyle(wsPemenang, 'A2', sSubtitle); setStyle(wsPemenang, 'B2', sSubtitle)
         setStyle(wsPemenang, 'A4', sHeader); setStyle(wsPemenang, 'B4', sHeader)
-        setStyle(wsPemenang, 'A5', sJuara1); setStyle(wsPemenang, 'B5', sJuara1)
-        setStyle(wsPemenang, 'A6', sJuara2); setStyle(wsPemenang, 'B6', sJuara2)
-        setStyle(wsPemenang, 'A7', sJuara3); setStyle(wsPemenang, 'B7', sJuara3)
-        setStyle(wsPemenang, 'A8', sJuara3); setStyle(wsPemenang, 'B8', sJuara3)
+        setStyle(wsPemenang, 'A5', sChampion1); setStyle(wsPemenang, 'B5', sChampion1)
+        setStyle(wsPemenang, 'A6', sChampion2); setStyle(wsPemenang, 'B6', sChampion2)
+        setStyle(wsPemenang, 'A7', sChampion3); setStyle(wsPemenang, 'B7', sChampion3)
+        setStyle(wsPemenang, 'A8', sChampion3); setStyle(wsPemenang, 'B8', sChampion3)
         XLSX.utils.book_append_sheet(wb, wsPemenang, `${ni + 1}.${nomor.name.slice(0, 12)} Pemenang`)
 
-        // ── SHEET 4: DAFTAR PESERTA ──────────────────────
+        // ── SHEET 4: PARTICIPANTS LIST ──────────────────────
         const pesAoa = [
-          [`DAFTAR PESERTA — ${nomor.name.toUpperCase()}`, '', '', '', '', '', ''],
+          [`PARTICIPANTS LIST — ${nomor.name.toUpperCase()}`, '', '', '', '', '', ''],
           [`Event: ${event.name}`, '', '', '', '', '', ''],
           ['', '', '', '', '', '', ''],
-          ['No', 'Nama Tim', 'Asal Daerah', 'Pelatih', 'Kapten', 'Nama Atlet', 'Manager & Official'],
+          ['No', 'Team Name', 'Region / Country', 'Coach', 'Captain', 'Athletes Name', 'Manager & Officials'],
           ...teams.map((t, i) => [i + 1, t.name, t.origin || '—', t.coach || '—', t.captain || '—', t.athletes || '—', t.officials || '—'])
         ]
         const wsPeserta = XLSX.utils.aoa_to_sheet(pesAoa)
@@ -297,10 +297,10 @@ export default function Reports({ eventId: initialEventId }) {
 
       const filename = `Rekap_${event.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`
       XLSX.writeFile(wb, filename)
-      showToast(`✅ Excel berhasil didownload!`)
+      showToast(`✅ Excel downloaded successfully!`)
     } catch (err) {
       console.error(err)
-      showToast('❌ Gagal membuat Excel. Coba lagi.')
+      showToast('❌ Failed to generate Excel. Coba lagi.')
     }
     setGenerating(false)
   }
@@ -311,18 +311,18 @@ export default function Reports({ eventId: initialEventId }) {
       <div>
         <div style={{ marginBottom: 32 }}>
           <div className="tag-line" style={{ marginBottom: 8 }}>Generate</div>
-          <h1 style={{ fontSize: 48, color: 'var(--green-field)' }}>REKAP HASIL</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>Pilih event untuk membuat rekap hasil pertandingan.</p>
+          <h1 style={{ fontSize: 48, color: 'var(--green-field)' }}>RESULTS SUMMARY</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>Select an event to generate results hasil pertandingan.</p>
         </div>
         {events.length === 0 ? (
           <div className="card empty-state">
             <div style={{ fontSize: 40, marginBottom: 16 }}>📊</div>
             <p>Belum ada event. Buat event terlebih dahulu.</p>
-            <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={() => navigate('events')}>→ Ke Daftar Event</button>
+            <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={() => navigate('events')}>→ Ke Events</button>
           </div>
         ) : (
           <div className="card">
-            <h2 style={{ fontSize: 22, color: 'var(--green-field)', marginBottom: 16 }}>PILIH EVENT</h2>
+            <h2 style={{ fontSize: 22, color: 'var(--green-field)', marginBottom: 16 }}>SELECT EVENT</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {events.map(ev => (
                 <div key={ev.id} onClick={() => { setSelectedEventId(ev.id); setNomorData({}) }}
@@ -338,7 +338,7 @@ export default function Reports({ eventId: initialEventId }) {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span className={`badge ${ev.status === 'selesai' ? 'badge-gold' : ev.status === 'berlangsung' ? 'badge-green' : 'badge-gray'}`}>
-                      {ev.status === 'selesai' ? 'Selesai' : ev.status === 'berlangsung' ? 'Berlangsung' : 'Persiapan'}
+                      {ev.status === 'selesai' ? 'Selesai' : ev.status === 'berlangsung' ? 'Ongoing' : 'Preparation'}
                     </span>
                     <button className="btn btn-primary" style={{ padding: '7px 16px', fontSize: 13 }}>📊 Rekap</button>
                   </div>
@@ -360,19 +360,19 @@ export default function Reports({ eventId: initialEventId }) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
         <div>
-          <div className="tag-line" style={{ marginBottom: 8 }}>Rekap Hasil Pertandingan</div>
-          <h1 style={{ fontSize: 42, color: 'var(--green-field)' }}>REKAP HASIL</h1>
+          <div className="tag-line" style={{ marginBottom: 8 }}>Results Pertandingan</div>
+          <h1 style={{ fontSize: 42, color: 'var(--green-field)' }}>RESULTS SUMMARY</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>Event: <strong style={{ color: 'var(--text-primary)' }}>{event.name}</strong></p>
         </div>
-        <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={() => { setSelectedEventId(null); setNomorData({}) }}>← Ganti Event</button>
+        <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={() => { setSelectedEventId(null); setNomorData({}) }}>← Change Event</button>
       </div>
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 24 }}>
         {[
-          { label: 'Nomor Pertandingan', value: nomors.length, icon: '🏸' },
-          { label: 'Total Kontingen', value: totalTeams, icon: '🏅' },
-          { label: 'Match Selesai', value: totalMatches, icon: '✅' },
+          { label: 'Match Number', value: nomors.length, icon: '🏸' },
+          { label: 'Total Teams', value: totalTeams, icon: '🏅' },
+          { label: 'Matches Completed', value: totalMatches, icon: '✅' },
         ].map((s, i) => (
           <div key={i} className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px' }}>
             <span style={{ fontSize: 24 }}>{s.icon}</span>
@@ -386,7 +386,7 @@ export default function Reports({ eventId: initialEventId }) {
 
       {/* Isi Excel */}
       <div className="card" style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 20, color: 'var(--green-field)', marginBottom: 16 }}>ISI FILE EXCEL</h2>
+        <h2 style={{ fontSize: 20, color: 'var(--green-field)', marginBottom: 16 }}>EXCEL FILE CONTENTS</h2>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>1 file Excel · {nomors.length} nomor pertandingan · masing-masing 4 sheet</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {nomors.map((n, ni) => (
@@ -396,10 +396,10 @@ export default function Reports({ eventId: initialEventId }) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 8 }}>
                 {[
-                  { icon: '📊', label: 'Pembagian Pool' },
-                  { icon: '⚔️', label: 'Hasil Pertandingan' },
-                  { icon: '🏆', label: 'Daftar Pemenang' },
-                  { icon: '👥', label: 'Daftar Peserta' },
+                  { icon: '📊', label: 'Pool Distribution' },
+                  { icon: '⚔️', label: 'Match Results' },
+                  { icon: '🏆', label: 'Winners List' },
+                  { icon: '👥', label: 'Participants List' },
                 ].map((sheet, si) => (
                   <div key={si} style={{ padding: '10px 12px', background: 'var(--gray-100)', border: '1px solid var(--border)', borderRadius: 8, textAlign: 'center' }}>
                     <div style={{ fontSize: 18, marginBottom: 4 }}>{sheet.icon}</div>
@@ -415,7 +415,7 @@ export default function Reports({ eventId: initialEventId }) {
 
       <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: 16, letterSpacing: 1 }}
         onClick={generateExcel} disabled={generating}>
-        {generating ? <><span className="spinner" style={{ marginRight: 8 }} />Membuat Excel...</> : '📊 Download Rekap Excel'}
+        {generating ? <><span className="spinner" style={{ marginRight: 8 }} />Generating Excel...</> : '📊 Download Excel Results'}
       </button>
     </div>
   )
