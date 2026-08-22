@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc,
-  serverTimestamp, query, orderBy, setDoc
+  serverTimestamp, query, orderBy, where, setDoc
 } from 'firebase/firestore'
 import { db } from '../firebase.js'
 import { useApp } from '../App.jsx'
@@ -171,4 +171,39 @@ export function useMatches(eventId, nomorId) {
   const setMatch = (id, data) => setDoc(doc(db, 'users', user.uid, 'events', eventId, 'nomors', nomorId, 'matches', id), data)
 
   return { matches, loading, addMatch, updateMatch, deleteMatch, setMatch }
+}
+
+// ── Team Data (master roster database, independent from event/nomor teams) ──
+// Stored at users/{uid}/teamDataTeams, each doc has a `category` field
+// (Men Regu, Women Regu, Men Quadrant, Women Quadrant, Men Double, Women
+// Double, Men Team Regu, Women Team Regu) plus roster info: manager,
+// headCoach, assistantCoach and a `players` array of { id, name, position, jerseyNumber }.
+// This is completely separate from useTeams() above, which powers the
+// name+code team entry inside Event > Nomor and must not be touched.
+export function useTeamDataTeams(category) {
+  const { user } = useApp()
+  const [teams, setTeams] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user || !category) { setTeams([]); setLoading(false); return }
+    setLoading(true)
+    const q = query(
+      collection(db, 'users', user.uid, 'teamDataTeams'),
+      where('category', '==', category),
+      orderBy('createdAt', 'asc')
+    )
+    const unsub = onSnapshot(q, snap => {
+      setTeams(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      setLoading(false)
+    })
+    return unsub
+  }, [user, category])
+
+  const base = () => collection(db, 'users', user.uid, 'teamDataTeams')
+  const addTeamData = (data) => addDoc(base(), { ...data, createdAt: serverTimestamp() })
+  const updateTeamData = (id, data) => updateDoc(doc(db, 'users', user.uid, 'teamDataTeams', id), data)
+  const deleteTeamData = (id) => deleteDoc(doc(db, 'users', user.uid, 'teamDataTeams', id))
+
+  return { teams, loading, addTeamData, updateTeamData, deleteTeamData }
 }

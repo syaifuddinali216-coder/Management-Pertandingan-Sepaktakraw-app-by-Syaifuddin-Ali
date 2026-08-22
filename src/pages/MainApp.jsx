@@ -8,6 +8,7 @@ import Events from './Events.jsx'
 import EventDetail from './EventDetail.jsx'
 import Reports from './Reports.jsx'
 import Schedule from './Schedule.jsx'
+import TeamData from './TeamData.jsx'
 
 export const NavContext = createContext(null)
 export const useNav = () => useContext(NavContext)
@@ -64,6 +65,7 @@ export default function MainApp() {
     'event-detail': <EventDetail eventId={selectedEventId} />,
     reports: <Reports eventId={selectedEventId} />,
     schedule: <Schedule eventId={selectedEventId} />,
+    'team-data': <TeamData />,
   }
 
   return (
