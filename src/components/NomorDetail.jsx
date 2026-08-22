@@ -247,9 +247,9 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
             <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: '#FFD700', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14, fontWeight: 700 }}>🏆 Final Results Turnamen</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
               {[
-                { medal: '🥇', label: '1ST PLACE', id: champion, bg: '#FFD700', border: '#FFD700', textColor: '#5a0812' },
-                { medal: '🥈', label: '1ST PLACEI', id: runnerUp, bg: '#FFD700', border: '#FFD700', textColor: '#5a0812' },
-                ...juara3.map(id => ({ medal: '🥉', label: '1ST PLACEII', id, bg: '#FFD700', border: '#FFD700', textColor: '#5a0812' })),
+                { medal: '🥇', label: 'GOLD MEDAL', id: champion, bg: '#FFD700', border: '#FFD700', textColor: '#5a0812' },
+                { medal: '🥈', label: 'SILVER MEDAL', id: runnerUp, bg: '#FFD700', border: '#FFD700', textColor: '#5a0812' },
+                ...juara3.map(id => ({ medal: '🥉', label: 'BRONZE MEDAL', id, bg: '#FFD700', border: '#FFD700', textColor: '#5a0812' })),
               ].filter(j => j.id).map((j, i) => (
                 <div key={i} style={{ background: j.bg, border: `2px solid ${j.border}`, borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontSize: 24 }}>{j.medal}</span>
