@@ -535,9 +535,9 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                 <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: '#FFD700', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, fontWeight: 700 }}>🏆 Final Results</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 10 }}>
                   {[
-                    { medal: '🥇', label: '1ST PLACE', id: koChampion },
-                    { medal: '🥈', label: '1ST PLACEI', id: runnerUp },
-                    ...juara3.map(id => ({ medal: '🥉', label: '1ST PLACEII', id })),
+                    { medal: '🥇', label: 'GOLD MEDAL', id: koChampion },
+                    { medal: '🥈', label: 'SILVER MEDAL', id: runnerUp },
+                    ...juara3.map(id => ({ medal: '🥉', label: 'BRONZE MEDAL', id })),
                   ].filter(j => j.id).map((j, i) => (
                     <div key={i} style={{ background: '#FFD700', border: '2px solid #B8860B', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 22 }}>{j.medal}</span>
