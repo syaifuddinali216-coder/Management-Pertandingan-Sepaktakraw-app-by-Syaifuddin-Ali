@@ -188,13 +188,19 @@ export function useTeamDataTeams(category) {
   useEffect(() => {
     if (!user || !category) { setTeams([]); setLoading(false); return }
     setLoading(true)
+    // NOTE: filtering by `category` only (no orderBy) so this doesn't need a
+    // Firestore composite index. Sorted client-side by createdAt instead.
     const q = query(
       collection(db, 'users', user.uid, 'teamDataTeams'),
-      where('category', '==', category),
-      orderBy('createdAt', 'asc')
+      where('category', '==', category)
     )
     const unsub = onSnapshot(q, snap => {
-      setTeams(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      list.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0))
+      setTeams(list)
+      setLoading(false)
+    }, err => {
+      console.error('useTeamDataTeams error:', err)
       setLoading(false)
     })
     return unsub
