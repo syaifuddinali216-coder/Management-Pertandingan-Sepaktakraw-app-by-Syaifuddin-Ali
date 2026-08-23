@@ -845,11 +845,17 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
                           const { homeSetWins: hw, awaySetWins: aw } = calcSetResult(match.sets || [])
                           return (
                             <div key={match.id} style={{ display: 'flex', alignItems: 'center', padding: '9px 11px', borderRadius: 8, background: match.status === 'done' ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.05)', border: `1.5px solid ${match.status === 'done' ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.2)'}`, gap: 6 }}>
-                              <div style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#fff' }}>{getTeamName(match.homeId)}</div>
+                              <div style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <TeamLogo src={getTeamLogo(match.homeId)} name={getTeamName(match.homeId)} size={20} />
+                                {getTeamName(match.homeId)}
+                              </div>
                               <div style={{ textAlign: 'center', minWidth: 60 }}>
                                 {match.status === 'done' ? <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#FFD700', fontSize: 14 }}>{hw} — {aw}</span> : <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>vs</span>}
                               </div>
-                              <div style={{ flex: 1, fontSize: 12, fontWeight: 600, textAlign: 'right', color: '#fff' }}>{getTeamName(match.awayId)}</div>
+                              <div style={{ flex: 1, fontSize: 12, fontWeight: 600, textAlign: 'right', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+                                {getTeamName(match.awayId)}
+                                <TeamLogo src={getTeamLogo(match.awayId)} name={getTeamName(match.awayId)} size={20} />
+                              </div>
                               <button className="btn btn-ghost" style={{ padding: '3px 9px', fontSize: 11, marginLeft: 4 }} onClick={() => openScore(match)}>{match.status === 'done' ? 'Edit' : 'Input'}</button>
                             </div>
                           )
