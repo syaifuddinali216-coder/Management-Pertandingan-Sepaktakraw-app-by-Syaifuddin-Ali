@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNav } from './MainApp.jsx'
 import { useApp } from '../App.jsx'
 import { useEvents, useNomors, useSchedule, useCourtAssignments, useTeams, useMatches } from '../hooks/useFirestore.js'
+import TeamLogo from '../components/TeamLogo.jsx'
 
 const DURATION_OPTIONS = [30, 35, 40, 45, 50, 60]
 const DAY_OPTIONS = [1,2,3,4,5,6,7,8,9,10]
@@ -278,6 +279,32 @@ export default function Schedule({ eventId }) {
     return map
   }, [allNomorData])
 
+  // Nama tim → logo (base64), dan kode → logo, dipakai buat nampilin avatar
+  // di samping nama tim pada grid jadwal.
+  const nameToLogo = useMemo(() => {
+    const map = {}
+    Object.values(allNomorData).forEach(nd => {
+      ;(nd.teams || []).forEach(t => {
+        if (t.name && t.logo) map[t.name] = t.logo
+      })
+    })
+    return map
+  }, [allNomorData])
+  const codeToLogo = useMemo(() => {
+    const map = {}
+    Object.values(allNomorData).forEach(nd => {
+      ;(nd.teams || []).forEach(t => {
+        if (t.code && t.logo) map[t.code.toUpperCase().trim()] = t.logo
+      })
+    })
+    return map
+  }, [allNomorData])
+  const resolveLogo = (raw) => {
+    if (!raw) return ''
+    const key = raw.toUpperCase().trim()
+    return codeToLogo[key] || nameToLogo[raw] || ''
+  }
+
   // Resolve: kalau ada kode yg cocok, ganti ke nama tim
   const resolveName = (raw) => {
     if (!raw) return raw
@@ -499,11 +526,13 @@ export default function Schedule({ eventId }) {
                           <>
                             <div style={{ fontSize: 10, color: '#4ade80', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{ct.nomorName || ''}</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                              <TeamLogo src={resolveLogo(ct.homeName)} name={homeDisplay} size={18} />
                               {homeIsCode && <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: '#FFD700', background: 'rgba(255,215,0,0.15)', padding: '1px 5px', borderRadius: 3 }}>{ct.homeName}</span>}
                               <div style={{ fontSize: 13, fontWeight: 700, color: homeIsCode ? '#FFD700' : '#fff' }}>{homeDisplay}</div>
                             </div>
                             <div style={{ fontSize: 11, color: 'rgba(255,215,0,0.7)', marginBottom: 2 }}>vs</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <TeamLogo src={resolveLogo(ct.awayName)} name={awayDisplay} size={18} />
                               {awayIsCode && <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: '#FFD700', background: 'rgba(255,215,0,0.15)', padding: '1px 5px', borderRadius: 3 }}>{ct.awayName}</span>}
                               <div style={{ fontSize: 13, fontWeight: 700, color: awayIsCode ? '#FFD700' : '#fff' }}>{awayDisplay}</div>
                             </div>
