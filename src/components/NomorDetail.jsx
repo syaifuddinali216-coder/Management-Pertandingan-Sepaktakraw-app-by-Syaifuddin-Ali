@@ -262,6 +262,7 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
               ].filter(j => j.id).map((j, i) => (
                 <div key={i} style={{ background: j.bg, border: `2px solid ${j.border}`, borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontSize: 24 }}>{j.medal}</span>
+                  <TeamLogo src={getTeamLogo(j.id)} name={getTeamName(j.id)} size={30} />
                   <div>
                     <div style={{ fontSize: 10, fontWeight: 700, color: j.textColor, fontFamily: 'var(--font-mono)', letterSpacing: 1, opacity: 0.7 }}>{j.label}</div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: j.textColor, marginTop: 2 }}>{getTeamName(j.id)}</div>
@@ -449,11 +450,13 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
                           borderBottom: si === 0 ? '1px solid rgba(255,255,255,0.1)' : 'none',
                         }}>
                           <span style={{
+                            display: 'flex', alignItems: 'center', gap: 5,
                             fontSize: 12, fontWeight: side.isWin ? 700 : 400,
                             color: side.isWin ? '#FFD700' : side.id ? '#fff' : 'rgba(255,255,255,0.3)',
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130,
+                            overflow: 'hidden', minWidth: 0,
                           }}>
-                            {side.isWin && '✓ '}{getTeamName(side.id)}
+                            {side.id && <TeamLogo src={getTeamLogo(side.id)} name={getTeamName(side.id)} size={16} />}
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{side.isWin && '✓ '}{getTeamName(side.id)}</span>
                           </span>
                           {match.status === 'done' && (
                             <span style={{
