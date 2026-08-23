@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { useTeams, useMatches } from '../hooks/useFirestore.js'
 import { useApp } from '../App.jsx'
+import TeamLogo from './TeamLogo.jsx'
+import { compressImage } from '../utils/imageCompress.js'
 
 // Hitung pemenang set
 const setWinner = (h, a) => {
@@ -134,8 +136,9 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
   const [tab, setTab] = useState('teams')
   const [showTeamModal, setShowTeamModal] = useState(false)
   const [editTeamId, setEditTeamId] = useState(null)
-  const [teamForm, setTeamForm] = useState({ name: '', origin: '', coach: '', code: '' })
+  const [teamForm, setTeamForm] = useState({ name: '', origin: '', coach: '', code: '', logo: '' })
   const [savingTeam, setSavingTeam] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
 
   const [showGroupSetup, setShowGroupSetup] = useState(false)
   const [numGroups, setNumGroups] = useState(2)
@@ -155,13 +158,28 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
   const [showKoScoreModal, setShowKoScoreModal] = useState(false)
 
   const getTeamName = (id) => teams.find(t => t.id === id)?.name || 'TBD'
+  const getTeamLogo = (id) => teams.find(t => t.id === id)?.logo || ''
 
   // Sub-team names: "Jakarta 1", "Jakarta 2", "Jakarta 3"
   const getSubName = (teamId, sub) => `${getTeamName(teamId)} ${sub}`
 
   // ── Team CRUD ─────────────────────────────────────────────
-  const openAddTeam = () => { setTeamForm({ name: '', origin: '', coach: '', code: '' }); setEditTeamId(null); setShowTeamModal(true) }
-  const openEditTeam = (t) => { setTeamForm({ name: t.name, origin: t.origin || '', coach: t.coach || '', code: t.code || '' }); setEditTeamId(t.id); setShowTeamModal(true) }
+  const openAddTeam = () => { setTeamForm({ name: '', origin: '', coach: '', code: '', logo: '' }); setEditTeamId(null); setShowTeamModal(true) }
+  const openEditTeam = (t) => { setTeamForm({ name: t.name, origin: t.origin || '', coach: t.coach || '', code: t.code || '', logo: t.logo || '' }); setEditTeamId(t.id); setShowTeamModal(true) }
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingLogo(true)
+    try {
+      const dataUrl = await compressImage(file)
+      setTeamForm(f => ({ ...f, logo: dataUrl }))
+    } catch (err) {
+      showToast('Gagal upload logo: ' + err.message)
+    }
+    setUploadingLogo(false)
+    e.target.value = ''
+  }
 
   const saveTeam = async () => {
     if (!teamForm.name.trim()) return showToast('Team name is required!')
@@ -403,7 +421,12 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                   <tr key={t.id}>
                     <td><span style={{ fontFamily: 'var(--font-mono)', color: '#FFD700', fontWeight: 700 }}>{String(i + 1).padStart(2, '0')}</span></td>
                     <td>{t.code ? <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, background: 'rgba(255,215,0,0.15)', color: '#FFD700', padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(255,215,0,0.3)', fontSize: 12 }}>{t.code}</span> : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>}</td>
-                    <td style={{ fontWeight: 600, color: '#fff' }}>{t.name}</td>
+                    <td style={{ fontWeight: 600, color: '#fff' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <TeamLogo src={t.logo} name={t.name} size={26} />
+                        {t.name}
+                      </div>
+                    </td>
                     <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.origin || '—'}</td>
                     <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.coach || '—'}</td>
                     <td style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)' }}>{t.name} 1, {t.name} 2, {t.name} 3</td>
@@ -665,6 +688,21 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
         <div className="modal-overlay" onClick={() => setShowTeamModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>{editTeamId ? 'EDIT TEAM' : 'ADD TEAM'}</h2>
+
+            {/* Team Logo upload */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+              <TeamLogo src={teamForm.logo} name={teamForm.name} size={56} />
+              <div>
+                <label className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 12, cursor: 'pointer', display: 'inline-block' }}>
+                  {uploadingLogo ? 'Uploading...' : teamForm.logo ? 'Change Logo' : '+ Upload Logo'}
+                  <input type="file" accept="image/*" onChange={handleLogoUpload} disabled={uploadingLogo} style={{ display: 'none' }} />
+                </label>
+                {teamForm.logo && (
+                  <button className="btn btn-ghost" style={{ padding: '7px 12px', fontSize: 12, marginLeft: 8, color: '#ffaaaa' }} onClick={() => setTeamForm({ ...teamForm, logo: '' })}>Remove</button>
+                )}
+              </div>
+            </div>
+
             <div style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
               ⭐ Sub-tim otomatis: <strong style={{ color: '#FFD700' }}>[Team Name] 1</strong>, <strong style={{ color: '#FFD700' }}>[Team Name] 2</strong>, <strong style={{ color: '#FFD700' }}>[Team Name] 3</strong>
             </div>
@@ -718,9 +756,9 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 580 }}>
             <h2>INPUT SCORE - TEAM EVENT</h2>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,215,0,0.08)', borderRadius: 8, marginBottom: 16 }}>
-              <span style={{ fontWeight: 700, color: '#FFD700', fontSize: 15 }}>{getTeamName(editMatch.homeId)}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#FFD700', fontSize: 15 }}><TeamLogo src={getTeamLogo(editMatch.homeId)} name={getTeamName(editMatch.homeId)} size={28} />{getTeamName(editMatch.homeId)}</span>
               <span style={{ color: 'rgba(255,255,255,0.4)' }}>vs</span>
-              <span style={{ fontWeight: 700, color: '#FFD700', fontSize: 15 }}>{getTeamName(editMatch.awayId)}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#FFD700', fontSize: 15 }}>{getTeamName(editMatch.awayId)}<TeamLogo src={getTeamLogo(editMatch.awayId)} name={getTeamName(editMatch.awayId)} size={28} /></span>
             </div>
 
             {/* 3 sub-matches */}
@@ -822,9 +860,9 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
               ⚠ Knockout: menang 2 regu sudah cukup untuk lolos. Tidak perlu isi semua regu jika sudah ada pemenang.
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,215,0,0.08)', borderRadius: 8, marginBottom: 16 }}>
-              <span style={{ fontWeight: 700, color: '#FFD700', fontSize: 15 }}>{getTeamName(koEditMatch.homeId)}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#FFD700', fontSize: 15 }}><TeamLogo src={getTeamLogo(koEditMatch.homeId)} name={getTeamName(koEditMatch.homeId)} size={28} />{getTeamName(koEditMatch.homeId)}</span>
               <span style={{ color: 'rgba(255,255,255,0.4)' }}>vs</span>
-              <span style={{ fontWeight: 700, color: '#FFD700', fontSize: 15 }}>{getTeamName(koEditMatch.awayId)}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#FFD700', fontSize: 15 }}>{getTeamName(koEditMatch.awayId)}<TeamLogo src={getTeamLogo(koEditMatch.awayId)} name={getTeamName(koEditMatch.awayId)} size={28} /></span>
             </div>
 
             {[0, 1, 2].map(si => (
