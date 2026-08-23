@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useTeams, useMatches } from '../hooks/useFirestore.js'
 import { useApp } from '../App.jsx'
+import TeamLogo from './TeamLogo.jsx'
+import { compressImage } from '../utils/imageCompress.js'
 
 const validSetScore = (a, b) => {
   a = parseInt(a) || 0; b = parseInt(b) || 0
@@ -32,13 +34,19 @@ const calcSetResult = (sets) => {
   return { homeSetWins: hw, awaySetWins: aw }
 }
 
-function SetScoreInput({ sets, onChange, homeLabel, awayLabel }) {
+function SetScoreInput({ sets, onChange, homeLabel, awayLabel, homeLogo, awayLogo }) {
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, marginBottom: 8 }}>
-        <div style={{ textAlign: 'center', fontSize: 11, color: '#FFD700', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>{homeLabel}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+          <TeamLogo src={homeLogo} name={homeLabel} size={32} />
+          <div style={{ textAlign: 'center', fontSize: 11, color: '#FFD700', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>{homeLabel}</div>
+        </div>
         <div />
-        <div style={{ textAlign: 'center', fontSize: 11, color: '#FFD700', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>{awayLabel}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+          <TeamLogo src={awayLogo} name={awayLabel} size={32} />
+          <div style={{ textAlign: 'center', fontSize: 11, color: '#FFD700', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontWeight: 700 }}>{awayLabel}</div>
+        </div>
       </div>
       {[0, 1, 2].map(i => (
         <div key={i} style={{ marginBottom: 12 }}>
@@ -136,6 +144,7 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
 
   const koMatches = matches.filter(m => m.phase === 'knockout')
   const getTeamName = (id) => { if (!id) return 'TBD'; return teams.find(t => t.id === id)?.name || 'TBD' }
+  const getTeamLogo = (id) => { if (!id) return ''; return teams.find(t => t.id === id)?.logo || '' }
 
   // Build suggested teams from group standings
   const getSuggested = () => {
@@ -507,7 +516,7 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>INPUT SKOR — {editMatch.roundName?.toUpperCase()}</h2>
             <p style={{ fontSize: 11, color: 'var(--red-card)', marginBottom: 16, fontFamily: 'var(--font-mono)' }}>⚠ Tidak boleh seri. Pemenang otomatis advances to the next round.</p>
-            <SetScoreInput sets={sets} onChange={setSets} homeLabel={getTeamName(editMatch.homeId)} awayLabel={getTeamName(editMatch.awayId)} />
+            <SetScoreInput sets={sets} onChange={setSets} homeLabel={getTeamName(editMatch.homeId)} awayLabel={getTeamName(editMatch.awayId)} homeLogo={getTeamLogo(editMatch.homeId)} awayLogo={getTeamLogo(editMatch.awayId)} />
             {sets.some(s => s?.home !== '' && s?.home !== undefined) && (
               <div style={{ padding: '10px 14px', background: 'rgba(244,160,28,0.08)', borderRadius: 8, marginBottom: 14, fontFamily: 'var(--font-mono)', fontSize: 13 }}>
                 Set Result: {calcSetResult(sets).homeSetWins} — {calcSetResult(sets).awaySetWins}
@@ -540,8 +549,9 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
   const [tab, setTab] = useState('teams')
   const [showTeamModal, setShowTeamModal] = useState(false)
   const [editTeamId, setEditTeamId] = useState(null)
-  const [teamForm, setTeamForm] = useState({ name: '', origin: '', coach: '', captain: '', athletes: '', officials: '', code: '' })
+  const [teamForm, setTeamForm] = useState({ name: '', origin: '', coach: '', captain: '', athletes: '', officials: '', code: '', logo: '' })
   const [savingTeam, setSavingTeam] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
   const [groups, setGroups] = useState([])
   const [showGroupSetup, setShowGroupSetup] = useState(false)
   const [numGroups, setNumGroups] = useState(2)
@@ -553,9 +563,24 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
   const [savingMatch, setSavingMatch] = useState(false)
 
   const getTeamName = (id) => teams.find(t => t.id === id)?.name || 'TBD'
+  const getTeamLogo = (id) => teams.find(t => t.id === id)?.logo || ''
 
-  const openAddTeam = () => { setTeamForm({ name: '', origin: '', coach: '', captain: '', athletes: '', officials: '', code: '' }); setEditTeamId(null); setShowTeamModal(true) }
-  const openEditTeam = (t) => { setTeamForm({ name: t.name, origin: t.origin || '', coach: t.coach || '', captain: t.captain || '', athletes: t.athletes || '', officials: t.officials || '', code: t.code || '' }); setEditTeamId(t.id); setShowTeamModal(true) }
+  const openAddTeam = () => { setTeamForm({ name: '', origin: '', coach: '', captain: '', athletes: '', officials: '', code: '', logo: '' }); setEditTeamId(null); setShowTeamModal(true) }
+  const openEditTeam = (t) => { setTeamForm({ name: t.name, origin: t.origin || '', coach: t.coach || '', captain: t.captain || '', athletes: t.athletes || '', officials: t.officials || '', code: t.code || '', logo: t.logo || '' }); setEditTeamId(t.id); setShowTeamModal(true) }
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingLogo(true)
+    try {
+      const dataUrl = await compressImage(file)
+      setTeamForm(f => ({ ...f, logo: dataUrl }))
+    } catch (err) {
+      showToast('Gagal upload logo: ' + err.message)
+    }
+    setUploadingLogo(false)
+    e.target.value = ''
+  }
 
   const saveTeam = async () => {
     if (!teamForm.name.trim()) return showToast('Team name is required!')
@@ -565,6 +590,7 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
     setSavingTeam(false); setShowTeamModal(false)
     showToast(editTeamId ? 'Tim diupdate!' : 'Tim ditambahkan!')
   }
+
 
   const removeTeam = async (id) => {
     if (!confirm('Delete this team?')) return
@@ -723,7 +749,12 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
                         : <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12 }}>—</span>
                       }
                     </td>
-                    <td style={{ fontWeight: 600, color: '#fff' }}>{t.name}</td>
+                    <td style={{ fontWeight: 600, color: '#fff' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <TeamLogo src={t.logo} name={t.name} size={26} />
+                        {t.name}
+                      </div>
+                    </td>
                     <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.origin || '—'}</td>
                     <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.coach || '—'}</td>
                     <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.captain || '—'}</td>
@@ -781,7 +812,12 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
                                 <td>
                                   <span style={{ display: 'inline-block', width: 22, height: 22, lineHeight: '22px', textAlign: 'center', borderRadius: 4, fontSize: 11, fontWeight: 700, background: i < 2 ? '#FFD700' : 'rgba(255,255,255,0.15)', color: i < 2 ? '#5a0812' : 'rgba(255,255,255,0.6)' }}>{i + 1}</span>
                                 </td>
-                                <td style={{ fontWeight: i < 2 ? 700 : 500, color: i < 2 ? '#FFD700' : '#fff', whiteSpace: 'nowrap' }}>{row.team.name}</td>
+                                <td style={{ fontWeight: i < 2 ? 700 : 500, color: i < 2 ? '#FFD700' : '#fff', whiteSpace: 'nowrap' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <TeamLogo src={row.team.logo} name={row.team.name} size={22} />
+                                    {row.team.name}
+                                  </div>
+                                </td>
                                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>{row.P}</td>
                                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#4ade80', fontWeight: 600, textAlign: 'center' }}>{row.W}</td>
                                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#ffaaaa', textAlign: 'center' }}>{row.L}</td>
@@ -841,6 +877,20 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
         <div className="modal-overlay" onClick={() => setShowTeamModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 560 }}>
             <h2>{editTeamId ? 'EDIT TEAM' : 'ADD TEAM'}</h2>
+
+            {/* Team Logo upload */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+              <TeamLogo src={teamForm.logo} name={teamForm.name} size={56} />
+              <div>
+                <label className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 12, cursor: 'pointer', display: 'inline-block' }}>
+                  {uploadingLogo ? 'Uploading...' : teamForm.logo ? 'Change Logo' : '+ Upload Logo'}
+                  <input type="file" accept="image/*" onChange={handleLogoUpload} disabled={uploadingLogo} style={{ display: 'none' }} />
+                </label>
+                {teamForm.logo && (
+                  <button className="btn btn-ghost" style={{ padding: '7px 12px', fontSize: 12, marginLeft: 8, color: '#ffaaaa' }} onClick={() => setTeamForm({ ...teamForm, logo: '' })}>Remove</button>
+                )}
+              </div>
+            </div>
 
             {/* Team Code - prominent at top */}
             <div style={{ background: 'rgba(255,215,0,0.1)', border: '1.5px solid rgba(255,215,0,0.4)', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
@@ -958,7 +1008,7 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
         <div className="modal-overlay" onClick={() => setShowScoreModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>INPUT SCORE PER SET</h2>
-            <SetScoreInput sets={sets} onChange={setSets} homeLabel={getTeamName(editMatch.homeId)} awayLabel={getTeamName(editMatch.awayId)} />
+            <SetScoreInput sets={sets} onChange={setSets} homeLabel={getTeamName(editMatch.homeId)} awayLabel={getTeamName(editMatch.awayId)} homeLogo={getTeamLogo(editMatch.homeId)} awayLogo={getTeamLogo(editMatch.awayId)} />
             {sets.some(s => s?.home !== '' && s?.home !== undefined) && (
               <div style={{ padding: '10px 14px', background: 'rgba(244,160,28,0.08)', borderRadius: 8, marginBottom: 14, fontFamily: 'var(--font-mono)', fontSize: 13 }}>
                 Set Result: {calcSetResult(sets).homeSetWins} — {calcSetResult(sets).awaySetWins}
