@@ -474,7 +474,12 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                             return (
                               <tr key={row.team.id} style={{ background: i < 2 ? 'rgba(255,215,0,0.06)' : 'transparent' }}>
                                 <td><span style={{ display: 'inline-block', width: 22, height: 22, lineHeight: '22px', textAlign: 'center', borderRadius: 4, fontSize: 11, fontWeight: 700, background: i < 2 ? '#FFD700' : 'rgba(255,255,255,0.1)', color: i < 2 ? '#1a0a2e' : 'rgba(255,255,255,0.5)' }}>{i + 1}</span></td>
-                                <td style={{ fontWeight: i < 2 ? 700 : 500, color: i < 2 ? '#FFD700' : '#fff', whiteSpace: 'nowrap' }}>{row.team.name}</td>
+                                <td style={{ fontWeight: i < 2 ? 700 : 500, color: i < 2 ? '#FFD700' : '#fff', whiteSpace: 'nowrap' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <TeamLogo src={row.team.logo} name={row.team.name} size={22} />
+                                    {row.team.name}
+                                  </div>
+                                </td>
                                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>{row.P}</td>
                                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#4ade80', fontWeight: 600, textAlign: 'center' }}>{row.W}</td>
                                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#ff9999', textAlign: 'center' }}>{row.L}</td>
