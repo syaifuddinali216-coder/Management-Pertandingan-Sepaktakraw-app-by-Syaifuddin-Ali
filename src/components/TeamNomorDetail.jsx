@@ -575,6 +575,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                   ].filter(j => j.id).map((j, i) => (
                     <div key={i} style={{ background: '#FFD700', border: '2px solid #B8860B', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 22 }}>{j.medal}</span>
+                      <TeamLogo src={getTeamLogo(j.id)} name={getTeamName(j.id)} size={28} />
                       <div>
                         <div style={{ fontSize: 10, fontWeight: 700, color: '#5a0812', fontFamily: 'var(--font-mono)', letterSpacing: 1 }}>{j.label}</div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: '#1a0a2e' }}>{getTeamName(j.id)}</div>
@@ -675,8 +676,9 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                             { id: match.awayId, score: aw, isWin: match.winnerId === match.awayId },
                           ].map((side, si) => (
                             <div key={si} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', height: CARD_H/2, background: side.isWin ? 'rgba(255,215,0,0.15)' : 'transparent', borderBottom: si === 0 ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
-                              <span style={{ fontSize: 11, fontWeight: side.isWin ? 700 : 400, color: side.isWin ? '#FFD700' : side.id ? '#fff' : 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130 }}>
-                                {side.isWin && '✓ '}{getTeamName(side.id)}
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: side.isWin ? 700 : 400, color: side.isWin ? '#FFD700' : side.id ? '#fff' : 'rgba(255,255,255,0.3)', overflow: 'hidden', minWidth: 0 }}>
+                                {side.id && <TeamLogo src={getTeamLogo(side.id)} name={getTeamName(side.id)} size={15} />}
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{side.isWin && '✓ '}{getTeamName(side.id)}</span>
                               </span>
                               {match.status === 'done' && (
                                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: side.isWin ? '#FFD700' : 'rgba(255,255,255,0.4)', background: side.isWin ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.08)', padding: '1px 7px', borderRadius: 4 }}>{side.score}</span>
