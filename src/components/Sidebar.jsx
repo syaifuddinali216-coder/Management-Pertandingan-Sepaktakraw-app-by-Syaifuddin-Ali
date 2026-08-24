@@ -1,7 +1,7 @@
 import React from 'react'
 import { useApp } from '../App.jsx'
 import { useNav } from '../pages/MainApp.jsx'
-import logo from '../assets/logo.png'
+import logo from '../logo.png'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '⚡' },
