@@ -129,6 +129,17 @@ export default function ScoreboardControl() {
         Klik "Buka Tampilan TV" untuk membuka tab baru — geser tab itu ke layar TV (extend display), lalu tekan F11 untuk full-screen. Semua perubahan di panel ini akan langsung muncul di TV secara real-time.
       </p>
 
+      {/* Event title */}
+      <div className="card" style={{ padding: '16px 20px', marginBottom: 20 }}>
+        <label style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Judul Event (tampil di TV)</label>
+        <input
+          value={data.eventTitle}
+          onChange={e => save({ eventTitle: e.target.value })}
+          placeholder="Contoh: SEPAKTAKRAW ASIAN CUP 2026 — SEMIFINAL"
+          style={{ fontWeight: 700, fontSize: 15 }}
+        />
+      </div>
+
       {/* Team cards side by side */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 16, marginBottom: 24, alignItems: 'stretch' }}>
         {['A', 'B'].map(team => {
