@@ -17,7 +17,7 @@ export default function Dashboard() {
         <div className="tag-line" style={{ marginBottom: 8 }}>Selamat Datang</div>
         <h1 style={{ fontSize: 48, color: 'var(--gold)' }}>DASHBOARD</h1>
         <p style={{ color: 'var(--gray-600)', fontSize: 14, marginTop: 4 }}>
-          Hello, <strong style={{ color: 'var(--white)' }}>{user?.displayName}</strong> 👋 Welcome to Sepak Takraw Tournament Manager!
+          Hello, <strong style={{ color: 'var(--white)' }}>{user?.displayName}</strong> 👋 Welcome to Sepaktakraw Game Management System!
         </p>
       </div>
 
