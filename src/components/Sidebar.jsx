@@ -1,6 +1,7 @@
 import React from 'react'
 import { useApp } from '../App.jsx'
 import { useNav } from '../pages/MainApp.jsx'
+import logo from '../assets/logo.png'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '⚡' },
@@ -23,12 +24,9 @@ export default function Sidebar({ currentPage, onLogout }) {
       display: 'flex', flexDirection: 'column', flexShrink: 0,
       boxShadow: '4px 0 30px rgba(0,0,0,0.4)',
     }}>
-      <div style={{ padding: '28px 24px 20px', borderBottom: '1px solid rgba(255,215,0,0.12)' }}>
-        <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,215,0,0.5)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Tournament Manager</div>
-        <div style={{ fontSize: 26, fontFamily: 'var(--font-display)', lineHeight: 1.1, letterSpacing: 1 }}>
-          <span style={{ background: 'linear-gradient(135deg, #FFD700, #B8860B)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SEPAK<br />TAKRAW</span>
-        </div>
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 6, fontStyle: 'italic' }}>by Syaifuddin Ali</div>
+      <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,215,0,0.12)' }}>
+        <img src={logo} alt="Sepaktakraw Game Management System" style={{ width: '100%', height: 'auto', display: 'block' }} />
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 8, fontStyle: 'italic' }}>by Syaifuddin Ali</div>
       </div>
       <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,215,0,0.4), transparent)' }} />
       <div style={{ padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
