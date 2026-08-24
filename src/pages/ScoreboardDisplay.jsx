@@ -1,0 +1,117 @@
+import React, { useEffect, useState } from 'react'
+import { useScoreboard } from '../hooks/useFirestore.js'
+import TeamLogo from '../components/TeamLogo.jsx'
+
+function formatTime(totalSeconds) {
+  const s = Math.max(0, Math.round(totalSeconds))
+  const m = Math.floor(s / 60)
+  const sec = s % 60
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+}
+
+export default function ScoreboardDisplay() {
+  const { data, loading } = useScoreboard()
+  const [, forceTick] = useState(0)
+
+  useEffect(() => {
+    if (!data.timerRunning) return
+    const iv = setInterval(() => forceTick(t => t + 1), 250)
+    return () => clearInterval(iv)
+  }, [data.timerRunning])
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0515', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="spinner" style={{ width: 40, height: 40, borderWidth: 4 }} />
+      </div>
+    )
+  }
+
+  const remainingSeconds = data.timerRunning
+    ? Math.max(0, (data.timerEndAt - Date.now()) / 1000)
+    : data.timerRemaining
+
+  const activeSet = data.sets[data.currentSet]
+  const timerLow = data.timerRunning && remainingSeconds <= 10
+
+  return (
+    <div style={{
+      minHeight: '100vh', width: '100vw', background: 'radial-gradient(ellipse at center, #1a0a2e 0%, #0a0515 100%)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      fontFamily: 'var(--font-body)', overflow: 'hidden', padding: '3vh 3vw', boxSizing: 'border-box',
+    }}>
+      <div style={{ width: '100%', maxWidth: 1400, border: '3px solid #FFD700', borderRadius: 20, background: 'rgba(0,0,0,0.35)', boxShadow: '0 0 60px rgba(255,215,0,0.15)', padding: '3vh 3vw' }}>
+
+        {/* Set indicator */}
+        <div style={{ textAlign: 'center', marginBottom: '2vh' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6vw', letterSpacing: 4, color: '#FFD700', fontWeight: 700, textTransform: 'uppercase' }}>
+            ● LIVE &nbsp;·&nbsp; SET {data.currentSet + 1} / 3
+          </span>
+        </div>
+
+        {/* Main scoreboard row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '2vw' }}>
+
+          {/* Team A */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5vh' }}>
+              <TeamLogo src={data.teamALogo} name={data.teamAName} size={100} />
+            </div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '3vw', color: '#fff', letterSpacing: 2, marginBottom: '1vh', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
+              {data.teamAName || 'TEAM A'}
+            </div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9vw', fontWeight: 800, color: '#FFD700', lineHeight: 1, textShadow: '0 0 30px rgba(255,215,0,0.5)' }}>
+              {activeSet.a}
+            </div>
+          </div>
+
+          {/* Center: sets summary + timer */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2vh', minWidth: '14vw' }}>
+            {data.sets.map((s, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: '0.8vw',
+                fontFamily: 'var(--font-mono)', fontSize: i === data.currentSet ? '1.3vw' : '1vw',
+                color: i === data.currentSet ? '#FFD700' : 'rgba(255,255,255,0.45)',
+                fontWeight: i === data.currentSet ? 800 : 500,
+              }}>
+                <span style={{ letterSpacing: 1 }}>SET {i + 1}:</span>
+                <span>{i < data.currentSet || (i === data.currentSet && (s.a > 0 || s.b > 0)) ? `${s.a} - ${s.b}` : '—'}</span>
+              </div>
+            ))}
+            <div style={{
+              marginTop: '1vh', fontFamily: 'var(--font-mono)', fontSize: '2.4vw', fontWeight: 800,
+              color: timerLow ? '#ff3b3b' : '#4ade80',
+              textShadow: timerLow ? '0 0 20px rgba(255,59,59,0.6)' : '0 0 20px rgba(74,222,128,0.5)',
+              animation: timerLow ? 'sbPulse 1s infinite' : 'none',
+            }}>
+              {formatTime(remainingSeconds)}
+            </div>
+            {data.timerLabel && (
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9vw', color: 'rgba(255,255,255,0.5)', letterSpacing: 2, textTransform: 'uppercase', marginTop: '-1.2vh' }}>
+                {data.timerLabel}
+              </div>
+            )}
+          </div>
+
+          {/* Team B */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5vh' }}>
+              <TeamLogo src={data.teamBLogo} name={data.teamBName} size={100} />
+            </div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '3vw', color: '#fff', letterSpacing: 2, marginBottom: '1vh', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
+              {data.teamBName || 'TEAM B'}
+            </div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9vw', fontWeight: 800, color: '#FFD700', lineHeight: 1, textShadow: '0 0 30px rgba(255,215,0,0.5)' }}>
+              {activeSet.b}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes sbPulse { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
+        body { margin: 0; }
+      `}</style>
+    </div>
+  )
+}
