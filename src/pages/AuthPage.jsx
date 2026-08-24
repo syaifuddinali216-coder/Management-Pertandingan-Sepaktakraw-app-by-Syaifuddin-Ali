@@ -5,6 +5,7 @@ import {
 } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../firebase.js'
+import logo from '../assets/logo.png'
 
 const SECRET_CODE = 'Sepaktakraw Indonesia'
 
@@ -80,10 +81,7 @@ export default function AuthPage() {
       <div style={{ width: '100%', maxWidth: 420 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ fontSize: 48, marginBottom: 8 }}>🏆</div>
-          <h1 style={{ fontSize: 32, color: "#FFD700", lineHeight: 1.1, marginBottom: 6 }}>
-            TURNAMEN MANAGER<br />SEPAK TAKRAW
-          </h1>
+          <img src={logo} alt="Sepaktakraw Game Management System" style={{ width: '100%', maxWidth: 340, height: 'auto', marginBottom: 10 }} />
           <p style={{ fontSize: 12, color: 'var(--green-accent)', fontFamily: 'var(--font-mono)', letterSpacing: 2 }}>
             by Syaifuddin Ali
           </p>
@@ -165,7 +163,7 @@ export default function AuthPage() {
         </div>
 
         <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--gray-600)', marginTop: 24, fontFamily: 'var(--font-mono)' }}>
-          © 2025 Syaifuddin Ali · Turnamen Manager Sepak Takraw
+          © 2025 Syaifuddin Ali · Sepaktakraw Game Management System
         </p>
       </div>
     </div>
