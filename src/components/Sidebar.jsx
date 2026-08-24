@@ -8,6 +8,7 @@ const navItems = [
   { id: 'schedule', label: 'Schedule', icon: '📅' },
   { id: 'reports', label: 'Results', icon: '📊' },
   { id: 'team-data', label: 'Team Data', icon: '👥' },
+  { id: 'scoreboard', label: 'Scoreboard', icon: '📟' },
 ]
 
 export default function Sidebar({ currentPage, onLogout }) {
