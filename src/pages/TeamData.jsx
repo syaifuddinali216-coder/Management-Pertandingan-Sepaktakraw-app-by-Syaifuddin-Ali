@@ -93,7 +93,7 @@ export default function TeamData() {
         <div style={{ marginBottom: 32 }}>
           <div className="tag-line" style={{ marginBottom: 8 }}>Master Database</div>
           <h1 style={{ fontSize: 48, color: 'var(--gold)' }}>TEAM DATA</h1>
-          <p style={{ fontSize: 13, marginTop: 8, color: 'var(--gray-600)' }}>Select a match category to view or input teams and their full roster (players, manager, coach, assistant coach).</p>
+          <p style={{ fontSize: 13, marginTop: 8, color: 'var(--text-muted)' }}>Select a match category to view or input teams and their full roster (players, manager, coach, assistant coach).</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
           {CATEGORIES.map(c => (
@@ -101,7 +101,7 @@ export default function TeamData() {
               onClick={() => { setCategory(c.id); setView('teams') }}>
               <div style={{ fontSize: 30, marginBottom: 10 }}>{c.icon}</div>
               <h2 style={{ fontSize: 18, color: 'var(--white)' }}>{c.id}</h2>
-              <p style={{ fontSize: 12, color: 'var(--gray-600)', marginTop: 6 }}>View teams &amp; roster →</p>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>View teams &amp; roster →</p>
             </div>
           ))}
         </div>
@@ -141,7 +141,7 @@ export default function TeamData() {
                       {t.code && <span className="badge badge-gray">{t.code}</span>}
                       <span className="badge badge-gold">{(t.players || []).length} Players</span>
                     </div>
-                    <div style={{ display: 'flex', gap: 20, fontSize: 13, color: 'var(--gray-600)' }}>
+                    <div style={{ display: 'flex', gap: 20, fontSize: 13, color: 'var(--text-muted)' }}>
                       {t.manager && <span>🧑‍💼 Manager: {t.manager}</span>}
                       {t.headCoach && <span>🎽 Head Coach: {t.headCoach}</span>}
                       {t.assistantCoach && <span>🎽 Asst. Coach: {t.assistantCoach}</span>}
@@ -221,7 +221,7 @@ export default function TeamData() {
             </div>
             <button className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 13 }} onClick={() => openEditTeam(selectedTeam)}>Edit Team Info</button>
           </div>
-          <div style={{ display: 'flex', gap: 28, fontSize: 13, color: 'var(--gray-600)', marginTop: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 28, fontSize: 13, color: 'var(--text-muted)', marginTop: 16, flexWrap: 'wrap' }}>
             <span>🧑‍💼 <strong style={{ color: '#fff' }}>Manager:</strong> {selectedTeam.manager || '—'}</span>
             <span>🎽 <strong style={{ color: '#fff' }}>Head Coach:</strong> {selectedTeam.headCoach || '—'}</span>
             <span>🎽 <strong style={{ color: '#fff' }}>Assistant Coach:</strong> {selectedTeam.assistantCoach || '—'}</span>
