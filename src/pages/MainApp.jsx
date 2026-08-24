@@ -9,6 +9,7 @@ import EventDetail from './EventDetail.jsx'
 import Reports from './Reports.jsx'
 import Schedule from './Schedule.jsx'
 import TeamData from './TeamData.jsx'
+import ScoreboardControl from './ScoreboardControl.jsx'
 
 export const NavContext = createContext(null)
 export const useNav = () => useContext(NavContext)
@@ -66,6 +67,7 @@ export default function MainApp() {
     reports: <Reports eventId={selectedEventId} />,
     schedule: <Schedule eventId={selectedEventId} />,
     'team-data': <TeamData />,
+    scoreboard: <ScoreboardControl />,
   }
 
   return (
