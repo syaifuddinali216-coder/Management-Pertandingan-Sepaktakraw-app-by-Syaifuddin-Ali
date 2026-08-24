@@ -80,9 +80,9 @@ export default function AuthPage() {
     }}>
       <div style={{ width: '100%', maxWidth: 420 }}>
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <img src={logo} alt="Sepaktakraw Game Management System" style={{ width: '100%', maxWidth: 340, height: 'auto', marginBottom: 10 }} />
-          <p style={{ fontSize: 12, color: 'var(--green-accent)', fontFamily: 'var(--font-mono)', letterSpacing: 2 }}>
+        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <img src={logo} alt="Sepaktakraw Game Management System" style={{ width: '100%', maxWidth: 340, height: 'auto', marginBottom: 4, display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
+          <p style={{ fontSize: 12, color: '#ffffff', fontFamily: 'var(--font-mono)', letterSpacing: 2 }}>
             by Syaifuddin Ali
           </p>
         </div>
