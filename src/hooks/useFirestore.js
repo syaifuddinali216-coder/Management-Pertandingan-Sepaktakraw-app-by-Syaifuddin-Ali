@@ -213,3 +213,43 @@ export function useTeamDataTeams(category) {
 
   return { teams, loading, addTeamData, updateTeamData, deleteTeamData }
 }
+
+// ── Live Scoreboard ──────────────────────────────────────────
+// Single live-match document at users/{uid}/scoreboard/live, synced in
+// real-time between the Control Panel (laptop) and the Display (TV via
+// HDMI). Team name/logo here are typed freely — independent from
+// useTeams/useTeamDataTeams — since a scoreboard match can be any game.
+const emptyScoreboard = {
+  teamAName: 'TEAM A', teamALogo: '',
+  teamBName: 'TEAM B', teamBLogo: '',
+  sets: [{ a: 0, b: 0 }, { a: 0, b: 0 }, { a: 0, b: 0 }],
+  currentSet: 0,
+  timerRunning: false,
+  timerEndAt: null,      // epoch ms — valid while timerRunning
+  timerRemaining: 0,     // seconds — valid while paused/stopped
+  timerLabel: '',
+}
+
+export function useScoreboard() {
+  const { user } = useApp()
+  const [data, setData] = useState(emptyScoreboard)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user) { setLoading(false); return }
+    const ref = doc(db, 'users', user.uid, 'scoreboard', 'live')
+    const unsub = onSnapshot(ref, snap => {
+      setData(snap.exists() ? { ...emptyScoreboard, ...snap.data() } : emptyScoreboard)
+      setLoading(false)
+    }, err => { console.error('useScoreboard error:', err); setLoading(false) })
+    return unsub
+  }, [user])
+
+  const save = (partial) => {
+    if (!user) return
+    const ref = doc(db, 'users', user.uid, 'scoreboard', 'live')
+    return setDoc(ref, { ...data, ...partial }, { merge: true })
+  }
+
+  return { data, loading, save }
+}
