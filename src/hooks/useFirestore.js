@@ -220,6 +220,7 @@ export function useTeamDataTeams(category) {
 // HDMI). Team name/logo here are typed freely — independent from
 // useTeams/useTeamDataTeams — since a scoreboard match can be any game.
 const emptyScoreboard = {
+  eventTitle: '',
   teamAName: 'TEAM A', teamALogo: '',
   teamBName: 'TEAM B', teamBLogo: '',
   sets: [{ a: 0, b: 0 }, { a: 0, b: 0 }, { a: 0, b: 0 }],
