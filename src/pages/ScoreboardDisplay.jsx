@@ -42,6 +42,24 @@ export default function ScoreboardDisplay() {
     }}>
       <div style={{ width: '100%', maxWidth: 1400, border: '3px solid #FFD700', borderRadius: 20, background: 'rgba(0,0,0,0.35)', boxShadow: '0 0 60px rgba(255,215,0,0.15)', padding: '3vh 3vw' }}>
 
+        {/* Event title banner */}
+        {data.eventTitle && (
+          <div style={{
+            textAlign: 'center', marginBottom: '2.5vh', paddingBottom: '2vh',
+            borderBottom: '2px solid rgba(255,215,0,0.3)',
+          }}>
+            <div style={{
+              fontFamily: 'var(--font-display)', fontSize: '2.6vw', color: '#fff',
+              letterSpacing: 3, textTransform: 'uppercase', lineHeight: 1.15,
+              textShadow: '0 0 25px rgba(255,215,0,0.5), 0 2px 8px rgba(0,0,0,0.6)',
+              background: 'linear-gradient(180deg, #ffffff 0%, #FFE855 60%, #FFD700 100%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            }}>
+              {data.eventTitle}
+            </div>
+          </div>
+        )}
+
         {/* Set indicator */}
         <div style={{ textAlign: 'center', marginBottom: '2vh' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6vw', letterSpacing: 4, color: '#FFD700', fontWeight: 700, textTransform: 'uppercase' }}>
