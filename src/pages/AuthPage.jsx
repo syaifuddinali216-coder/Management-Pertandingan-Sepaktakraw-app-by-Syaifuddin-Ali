@@ -5,7 +5,7 @@ import {
 } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../firebase.js'
-import logo from '../assets/logo.png'
+import logo from '../logo.png'
 
 const SECRET_CODE = 'Sepaktakraw Indonesia'
 
