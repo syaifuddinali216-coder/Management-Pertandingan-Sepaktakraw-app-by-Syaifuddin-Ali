@@ -173,25 +173,26 @@ export function useMatches(eventId, nomorId) {
   return { matches, loading, addMatch, updateMatch, deleteMatch, setMatch }
 }
 
-// ── Team Data (master roster database, independent from event/nomor teams) ──
-// Stored at users/{uid}/teamDataTeams, each doc has a `category` field
-// (Men Regu, Women Regu, Men Quadrant, Women Quadrant, Men Double, Women
-// Double, Men Team Regu, Women Team Regu) plus roster info: manager,
-// headCoach, assistantCoach and a `players` array of { id, name, position, jerseyNumber }.
+// ── Team Data (master roster database, scoped per Event) ──────
+// Stored at users/{uid}/teamDataTeams, each doc has `eventId` + `category`
+// fields (10 categories: Men/Women — Regu, Quadrant, Double, Team Regu,
+// Team Double) plus roster info: manager, headCoach, assistantCoach and a
+// `players` array of { id, name, position, jerseyNumber, photo }.
 // This is completely separate from useTeams() above, which powers the
 // name+code team entry inside Event > Nomor and must not be touched.
-export function useTeamDataTeams(category) {
+export function useTeamDataTeams(eventId, category) {
   const { user } = useApp()
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user || !category) { setTeams([]); setLoading(false); return }
+    if (!user || !eventId || !category) { setTeams([]); setLoading(false); return }
     setLoading(true)
-    // NOTE: filtering by `category` only (no orderBy) so this doesn't need a
-    // Firestore composite index. Sorted client-side by createdAt instead.
+    // NOTE: filtering by eventId + category only (no orderBy) so this
+    // doesn't need a Firestore composite index. Sorted client-side.
     const q = query(
       collection(db, 'users', user.uid, 'teamDataTeams'),
+      where('eventId', '==', eventId),
       where('category', '==', category)
     )
     const unsub = onSnapshot(q, snap => {
@@ -204,10 +205,10 @@ export function useTeamDataTeams(category) {
       setLoading(false)
     })
     return unsub
-  }, [user, category])
+  }, [user, eventId, category])
 
   const base = () => collection(db, 'users', user.uid, 'teamDataTeams')
-  const addTeamData = (data) => addDoc(base(), { ...data, createdAt: serverTimestamp() })
+  const addTeamData = (data) => addDoc(base(), { ...data, eventId, category, createdAt: serverTimestamp() })
   const updateTeamData = (id, data) => updateDoc(doc(db, 'users', user.uid, 'teamDataTeams', id), data)
   const deleteTeamData = (id) => deleteDoc(doc(db, 'users', user.uid, 'teamDataTeams', id))
 
