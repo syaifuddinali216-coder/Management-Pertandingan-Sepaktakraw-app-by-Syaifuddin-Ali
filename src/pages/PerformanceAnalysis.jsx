@@ -3,6 +3,7 @@ import { useApp } from '../App.jsx'
 import { useEvents, useTeamDataTeams, usePerformanceMatches } from '../hooks/useFirestore.js'
 import TeamLogo from '../components/TeamLogo.jsx'
 import PerformanceTracking from '../components/PerformanceTracking.jsx'
+import PerformanceResults from '../components/PerformanceResults.jsx'
 
 const CATEGORIES = [
   { id: 'Men Regu', icon: '🥎' }, { id: 'Women Regu', icon: '🥎' },
@@ -36,6 +37,8 @@ export default function PerformanceAnalysis() {
   const { matches, loading: matchesLoading, addMatch, updateMatch, deleteMatch } = usePerformanceMatches(eventId)
   const [trackingMatchId, setTrackingMatchId] = useState(null)
   const trackingMatch = matches.find(m => m.id === trackingMatchId) || null
+  const [resultsMatchId, setResultsMatchId] = useState(null)
+  const resultsMatch = matches.find(m => m.id === resultsMatchId) || null
 
   // ── Setup wizard state ──
   const [step, setStep] = useState('category') // category | teams | lineup
@@ -197,6 +200,15 @@ export default function PerformanceAnalysis() {
     )
   }
 
+  if (view === 'list' && resultsMatch) {
+    return (
+      <PerformanceResults
+        match={resultsMatch}
+        onBack={() => setResultsMatchId(null)}
+      />
+    )
+  }
+
   if (view === 'list') {
     return (
       <div>
@@ -233,6 +245,7 @@ export default function PerformanceAnalysis() {
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button className="btn btn-primary" style={{ padding: '7px 16px', fontSize: 13 }} onClick={() => setTrackingMatchId(m.id)}>▶ Open Analysis</button>
+                    <button className="btn btn-ghost" style={{ padding: '7px 16px', fontSize: 13 }} onClick={() => setResultsMatchId(m.id)}>📊 Results</button>
                     <button className="btn btn-danger" style={{ padding: '7px 14px', fontSize: 13 }} onClick={() => removeMatch(m.id)}>Delete</button>
                   </div>
                 </div>
