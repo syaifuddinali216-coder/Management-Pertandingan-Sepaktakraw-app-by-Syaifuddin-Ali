@@ -255,3 +255,39 @@ export function useScoreboard() {
 
   return { data, loading, save }
 }
+
+// ── Athlete Performance Analysis ────────────────────────────
+// Stored at users/{uid}/performanceMatches/{id}. Each doc represents one
+// analyzed encounter (Event + category + Team A vs Team B), with one or
+// three sub-matches (Regu/Quadrant/Double = 1 sub-match; Team Regu/Team
+// Double = 3 sub-matches, since those categories are played as 3 separate
+// individual/pair matches between the same two teams). Each sub-match
+// holds its own starters/substitutes lineup and per-player action stats.
+export function usePerformanceMatches(eventId) {
+  const { user } = useApp()
+  const [matches, setMatches] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user || !eventId) { setMatches([]); setLoading(false); return }
+    setLoading(true)
+    const q = query(
+      collection(db, 'users', user.uid, 'performanceMatches'),
+      where('eventId', '==', eventId)
+    )
+    const unsub = onSnapshot(q, snap => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+      setMatches(list)
+      setLoading(false)
+    }, err => { console.error('usePerformanceMatches error:', err); setLoading(false) })
+    return unsub
+  }, [user, eventId])
+
+  const base = () => collection(db, 'users', user.uid, 'performanceMatches')
+  const addMatch = (data) => addDoc(base(), { ...data, eventId, status: 'setup', createdAt: serverTimestamp() })
+  const updateMatch = (id, data) => updateDoc(doc(db, 'users', user.uid, 'performanceMatches', id), data)
+  const deleteMatch = (id) => deleteDoc(doc(db, 'users', user.uid, 'performanceMatches', id))
+
+  return { matches, loading, addMatch, updateMatch, deleteMatch }
+}
