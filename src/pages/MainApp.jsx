@@ -10,6 +10,7 @@ import Reports from './Reports.jsx'
 import Schedule from './Schedule.jsx'
 import TeamData from './TeamData.jsx'
 import ScoreboardControl from './ScoreboardControl.jsx'
+import PerformanceAnalysis from './PerformanceAnalysis.jsx'
 
 export const NavContext = createContext(null)
 export const useNav = () => useContext(NavContext)
@@ -68,6 +69,7 @@ export default function MainApp() {
     schedule: <Schedule eventId={selectedEventId} />,
     'team-data': <TeamData />,
     scoreboard: <ScoreboardControl />,
+    'performance-analysis': <PerformanceAnalysis />,
   }
 
   return (
