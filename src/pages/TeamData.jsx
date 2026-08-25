@@ -1,5 +1,8 @@
 import React, { useState } from 'react'
-import { useTeamDataTeams } from '../hooks/useFirestore.js'
+import { useEvents, useTeamDataTeams } from '../hooks/useFirestore.js'
+import { useApp } from '../App.jsx'
+import TeamLogo from '../components/TeamLogo.jsx'
+import { compressImage } from '../utils/imageCompress.js'
 
 // Fixed list of match categories for the Team Data master database.
 // Independent from the NOMOR_OPTIONS used inside Event > Nomor.
@@ -12,37 +15,67 @@ const CATEGORIES = [
   { id: 'Women Double', icon: '👭' },
   { id: 'Men Team Regu', icon: '⭐' },
   { id: 'Women Team Regu', icon: '⭐' },
+  { id: 'Men Team Double', icon: '✨' },
+  { id: 'Women Team Double', icon: '✨' },
 ]
 
-const POSITION_SUGGESTIONS = ['Tekong', 'Left Apit', 'Right Apit', 'Feeder', 'Substitute']
+// Standardized position options per category type — feeds directly into
+// the Athlete Performance Analysis feature later, so these must stay fixed
+// (dropdown, not free text).
+function getPositionOptions(category) {
+  if (category.includes('Quadrant')) return ['Tekong', 'Feeder', 'Killer 1', 'Killer 2', 'Substitute']
+  if (category.includes('Double')) return ['Feeder', 'Killer', 'Substitute']
+  return ['Tekong', 'Feeder', 'Killer', 'Substitute'] // Regu, Team Regu
+}
 
-const emptyTeamForm = { name: '', code: '', manager: '', headCoach: '', assistantCoach: '' }
-const emptyPlayerForm = { name: '', position: '', jerseyNumber: '' }
+const emptyTeamForm = { name: '', code: '', manager: '', headCoach: '', assistantCoach: '', logo: '' }
+const emptyPlayerForm = { name: '', position: '', jerseyNumber: '', photo: '' }
 
 export default function TeamData() {
-  const [view, setView] = useState('categories') // categories | teams | roster
+  const { showToast } = useApp()
+  const { events, loading: eventsLoading } = useEvents()
+
+  const [view, setView] = useState('events') // events | categories | teams | roster
+  const [eventId, setEventId] = useState(null)
   const [category, setCategory] = useState(null)
   const [selectedTeamId, setSelectedTeamId] = useState(null)
 
-  const { teams, loading, addTeamData, updateTeamData, deleteTeamData } = useTeamDataTeams(category)
+  const { teams, loading, addTeamData, updateTeamData, deleteTeamData } = useTeamDataTeams(eventId, category)
   const selectedTeam = teams.find(t => t.id === selectedTeamId) || null
+  const positionOptions = category ? getPositionOptions(category) : []
+  const selectedEvent = events.find(e => e.id === eventId) || null
 
   // ── Team modal (add/edit team basic info) ──
   const [showTeamModal, setShowTeamModal] = useState(false)
   const [teamEditId, setTeamEditId] = useState(null)
   const [teamForm, setTeamForm] = useState(emptyTeamForm)
   const [savingTeam, setSavingTeam] = useState(false)
+  const [uploadingTeamLogo, setUploadingTeamLogo] = useState(false)
 
   const openAddTeam = () => { setTeamForm(emptyTeamForm); setTeamEditId(null); setShowTeamModal(true) }
   const openEditTeam = (t) => {
-    setTeamForm({ name: t.name, code: t.code || '', manager: t.manager || '', headCoach: t.headCoach || '', assistantCoach: t.assistantCoach || '' })
+    setTeamForm({ name: t.name, code: t.code || '', manager: t.manager || '', headCoach: t.headCoach || '', assistantCoach: t.assistantCoach || '', logo: t.logo || '' })
     setTeamEditId(t.id); setShowTeamModal(true)
+  }
+
+  const handleTeamLogoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingTeamLogo(true)
+    try {
+      const dataUrl = await compressImage(file)
+      setTeamForm(f => ({ ...f, logo: dataUrl }))
+    } catch (err) {
+      showToast('Failed to upload logo: ' + err.message)
+    }
+    setUploadingTeamLogo(false)
+    e.target.value = ''
   }
   const saveTeam = async () => {
     if (!teamForm.name.trim()) return
     setSavingTeam(true)
     if (teamEditId) await updateTeamData(teamEditId, teamForm)
-    else await addTeamData({ ...teamForm, category, players: [] })
+    else await addTeamData({ ...teamForm, players: [] })
     setSavingTeam(false)
     setShowTeamModal(false)
   }
@@ -57,9 +90,24 @@ export default function TeamData() {
   const [playerEditId, setPlayerEditId] = useState(null)
   const [playerForm, setPlayerForm] = useState(emptyPlayerForm)
   const [savingPlayer, setSavingPlayer] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   const openAddPlayer = () => { setPlayerForm(emptyPlayerForm); setPlayerEditId(null); setShowPlayerModal(true) }
-  const openEditPlayer = (p) => { setPlayerForm({ name: p.name, position: p.position || '', jerseyNumber: p.jerseyNumber || '' }); setPlayerEditId(p.id); setShowPlayerModal(true) }
+  const openEditPlayer = (p) => { setPlayerForm({ name: p.name, position: p.position || '', jerseyNumber: p.jerseyNumber || '', photo: p.photo || '' }); setPlayerEditId(p.id); setShowPlayerModal(true) }
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingPhoto(true)
+    try {
+      const dataUrl = await compressImage(file)
+      setPlayerForm(f => ({ ...f, photo: dataUrl }))
+    } catch (err) {
+      showToast('Failed to upload photo: ' + err.message)
+    }
+    setUploadingPhoto(false)
+    e.target.value = ''
+  }
 
   const savePlayer = async () => {
     if (!playerForm.name.trim() || !selectedTeam) return
@@ -86,14 +134,47 @@ export default function TeamData() {
 
   const openTeam = (t) => { setSelectedTeamId(t.id); setView('roster') }
 
-  // ── VIEW: Categories ──
-  if (view === 'categories') {
+  // ── VIEW: Events ──
+  if (view === 'events') {
     return (
       <div>
         <div style={{ marginBottom: 32 }}>
           <div className="tag-line" style={{ marginBottom: 8 }}>Master Database</div>
           <h1 style={{ fontSize: 48, color: 'var(--gold)' }}>TEAM DATA</h1>
-          <p style={{ fontSize: 13, marginTop: 8, color: 'var(--text-muted)' }}>Select a match category to view or input teams and their full roster (players, manager, coach, assistant coach).</p>
+          <p style={{ fontSize: 13, marginTop: 8, color: 'var(--text-muted)' }}>Select an event to view or input teams and their full roster.</p>
+        </div>
+        {eventsLoading ? (
+          <div style={{ textAlign: 'center', padding: 60 }}><div className="spinner" style={{ width: 36, height: 36, borderWidth: 3 }} /></div>
+        ) : events.length === 0 ? (
+          <div className="card empty-state">
+            <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
+            <p>No events yet. Create an event first from the Events menu.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+            {events.map(e => (
+              <div key={e.id} className="card" style={{ cursor: 'pointer', padding: '20px 22px' }}
+                onClick={() => { setEventId(e.id); setView('categories') }}>
+                <h2 style={{ fontSize: 18, color: 'var(--white)', marginBottom: 6 }}>{e.name}</h2>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{e.location} {e.date && `· ${new Date(e.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`}</p>
+                <p style={{ fontSize: 12, color: 'var(--gold)', marginTop: 10 }}>View team data →</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ── VIEW: Categories ──
+  if (view === 'categories') {
+    return (
+      <div>
+        <button className="btn btn-ghost" style={{ marginBottom: 20, padding: '7px 14px', fontSize: 13 }} onClick={() => { setView('events'); setEventId(null) }}>← Back to Events</button>
+        <div style={{ marginBottom: 32 }}>
+          <div className="tag-line" style={{ marginBottom: 8 }}>{selectedEvent?.name}</div>
+          <h1 style={{ fontSize: 40, color: 'var(--gold)' }}>TEAM DATA</h1>
+          <p style={{ fontSize: 13, marginTop: 8, color: 'var(--text-muted)' }}>Select a match category to view or input teams and their full roster.</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
           {CATEGORIES.map(c => (
@@ -114,9 +195,9 @@ export default function TeamData() {
     return (
       <div>
         <button className="btn btn-ghost" style={{ marginBottom: 20, padding: '7px 14px', fontSize: 13 }} onClick={() => { setView('categories'); setCategory(null) }}>← Back to Categories</button>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <div className="tag-line" style={{ marginBottom: 8 }}>Team Data</div>
+            <div className="tag-line" style={{ marginBottom: 8 }}>{selectedEvent?.name}</div>
             <h1 style={{ fontSize: 40, color: 'var(--gold)' }}>{category}</h1>
           </div>
           <button className="btn btn-primary" onClick={openAddTeam}>+ Add Team</button>
@@ -134,14 +215,15 @@ export default function TeamData() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {teams.map(t => (
               <div key={t.id} className="card" style={{ padding: '20px 24px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-                  <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => openTeam(t)}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, cursor: 'pointer', minWidth: 200 }} onClick={() => openTeam(t)}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
+                      <TeamLogo src={t.logo} name={t.name} size={30} />
                       <h2 style={{ fontSize: 20, color: 'var(--white)' }}>{t.name}</h2>
                       {t.code && <span className="badge badge-gray">{t.code}</span>}
                       <span className="badge badge-gold">{(t.players || []).length} Players</span>
                     </div>
-                    <div style={{ display: 'flex', gap: 20, fontSize: 13, color: 'var(--text-muted)' }}>
+                    <div style={{ display: 'flex', gap: 20, fontSize: 13, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                       {t.manager && <span>🧑‍💼 Manager: {t.manager}</span>}
                       {t.headCoach && <span>🎽 Head Coach: {t.headCoach}</span>}
                       {t.assistantCoach && <span>🎽 Asst. Coach: {t.assistantCoach}</span>}
@@ -162,6 +244,20 @@ export default function TeamData() {
           <div className="modal-overlay" onClick={() => setShowTeamModal(false)}>
             <div className="modal" onClick={e => e.stopPropagation()}>
               <h2>{teamEditId ? 'EDIT TEAM' : 'NEW TEAM'}</h2>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+                <TeamLogo src={teamForm.logo} name={teamForm.name} size={56} />
+                <div>
+                  <label className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 12, cursor: 'pointer', display: 'inline-block' }}>
+                    {uploadingTeamLogo ? 'Uploading...' : teamForm.logo ? 'Change Logo' : '+ Upload Logo'}
+                    <input type="file" accept="image/*" onChange={handleTeamLogoUpload} disabled={uploadingTeamLogo} style={{ display: 'none' }} />
+                  </label>
+                  {teamForm.logo && (
+                    <button className="btn btn-ghost" style={{ padding: '7px 12px', fontSize: 12, marginLeft: 8, color: '#ffaaaa' }} onClick={() => setTeamForm({ ...teamForm, logo: '' })}>Remove</button>
+                  )}
+                </div>
+              </div>
+
               <div className="form-group">
                 <label>Team Name *</label>
                 <input value={teamForm.name} onChange={e => setTeamForm({ ...teamForm, name: e.target.value })} placeholder="e.g. Jakarta Selection" autoFocus />
@@ -213,11 +309,14 @@ export default function TeamData() {
         <button className="btn btn-ghost" style={{ marginBottom: 20, padding: '7px 14px', fontSize: 13 }} onClick={() => { setView('teams'); setSelectedTeamId(null) }}>← Back to {category}</button>
 
         <div className="card" style={{ padding: '24px 26px', marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-            <div>
-              <div className="tag-line" style={{ marginBottom: 6 }}>{category}</div>
-              <h1 style={{ fontSize: 32, color: 'var(--gold)' }}>{selectedTeam.name}</h1>
-              {selectedTeam.code && <span className="badge badge-gray" style={{ marginTop: 8, display: 'inline-block' }}>{selectedTeam.code}</span>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <TeamLogo src={selectedTeam.logo} name={selectedTeam.name} size={56} />
+              <div>
+                <div className="tag-line" style={{ marginBottom: 6 }}>{category}</div>
+                <h1 style={{ fontSize: 32, color: 'var(--gold)' }}>{selectedTeam.name}</h1>
+                {selectedTeam.code && <span className="badge badge-gray" style={{ marginTop: 8, display: 'inline-block' }}>{selectedTeam.code}</span>}
+              </div>
             </div>
             <button className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 13 }} onClick={() => openEditTeam(selectedTeam)}>Edit Team Info</button>
           </div>
@@ -242,11 +341,12 @@ export default function TeamData() {
         ) : (
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             <table>
-              <thead><tr><th>#</th><th>Jersey No.</th><th>Player Name</th><th>Position</th><th>Actions</th></tr></thead>
+              <thead><tr><th>#</th><th>Photo</th><th>Jersey No.</th><th>Player Name</th><th>Position</th><th>Actions</th></tr></thead>
               <tbody>
                 {players.map((p, i) => (
                   <tr key={p.id}>
                     <td>{i + 1}</td>
+                    <td><TeamLogo src={p.photo} name={p.name} size={32} /></td>
                     <td>{p.jerseyNumber || '—'}</td>
                     <td>{p.name}</td>
                     <td>{p.position || '—'}</td>
@@ -267,6 +367,20 @@ export default function TeamData() {
           <div className="modal-overlay" onClick={() => setShowTeamModal(false)}>
             <div className="modal" onClick={e => e.stopPropagation()}>
               <h2>EDIT TEAM</h2>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+                <TeamLogo src={teamForm.logo} name={teamForm.name} size={56} />
+                <div>
+                  <label className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 12, cursor: 'pointer', display: 'inline-block' }}>
+                    {uploadingTeamLogo ? 'Uploading...' : teamForm.logo ? 'Change Logo' : '+ Upload Logo'}
+                    <input type="file" accept="image/*" onChange={handleTeamLogoUpload} disabled={uploadingTeamLogo} style={{ display: 'none' }} />
+                  </label>
+                  {teamForm.logo && (
+                    <button className="btn btn-ghost" style={{ padding: '7px 12px', fontSize: 12, marginLeft: 8, color: '#ffaaaa' }} onClick={() => setTeamForm({ ...teamForm, logo: '' })}>Remove</button>
+                  )}
+                </div>
+              </div>
+
               <div className="form-group">
                 <label>Team Name *</label>
                 <input value={teamForm.name} onChange={e => setTeamForm({ ...teamForm, name: e.target.value })} autoFocus />
@@ -303,6 +417,20 @@ export default function TeamData() {
           <div className="modal-overlay" onClick={() => setShowPlayerModal(false)}>
             <div className="modal" onClick={e => e.stopPropagation()}>
               <h2>{playerEditId ? 'EDIT PLAYER' : 'ADD PLAYER'}</h2>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+                <TeamLogo src={playerForm.photo} name={playerForm.name} size={56} />
+                <div>
+                  <label className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 12, cursor: 'pointer', display: 'inline-block' }}>
+                    {uploadingPhoto ? 'Uploading...' : playerForm.photo ? 'Change Photo' : '+ Upload Photo'}
+                    <input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto} style={{ display: 'none' }} />
+                  </label>
+                  {playerForm.photo && (
+                    <button className="btn btn-ghost" style={{ padding: '7px 12px', fontSize: 12, marginLeft: 8, color: '#ffaaaa' }} onClick={() => setPlayerForm({ ...playerForm, photo: '' })}>Remove</button>
+                  )}
+                </div>
+              </div>
+
               <div className="form-group">
                 <label>Player Name *</label>
                 <input value={playerForm.name} onChange={e => setPlayerForm({ ...playerForm, name: e.target.value })} placeholder="Full name" autoFocus />
@@ -310,10 +438,10 @@ export default function TeamData() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div className="form-group">
                   <label>Position</label>
-                  <input list="position-suggestions" value={playerForm.position} onChange={e => setPlayerForm({ ...playerForm, position: e.target.value })} placeholder="e.g. Tekong" />
-                  <datalist id="position-suggestions">
-                    {POSITION_SUGGESTIONS.map(p => <option key={p} value={p} />)}
-                  </datalist>
+                  <select value={playerForm.position} onChange={e => setPlayerForm({ ...playerForm, position: e.target.value })}>
+                    <option value="">— Select —</option>
+                    {positionOptions.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Jersey Number</label>
