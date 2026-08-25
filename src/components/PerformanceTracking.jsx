@@ -156,13 +156,16 @@ export default function PerformanceTracking({ match, updateMatch, onBack }) {
           <div style={{ marginBottom: 14, fontSize: 13, color: 'var(--text-muted)' }}>Select a player above, then tap an action below.</div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12, textAlign: 'left', maxWidth: 700, margin: '0 auto' }}>
           {ACTIONS.map(a => (
-            <div key={a.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ flex: 1, textAlign: 'left', fontSize: 13, fontWeight: 600, color: '#fff' }}>{a.label}</span>
-              <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: 12, background: '#4ade80', borderColor: '#4ade80', color: '#0a2e17' }}
+            <div key={a.key} style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10,
+            }}>
+              <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#fff' }}>{a.label}</span>
+              <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: 13, fontWeight: 700, background: '#4ade80', borderColor: '#4ade80', color: '#0a2e17' }}
                 disabled={!selected || saving} onClick={() => recordAction(a.key, 'success')}>✓</button>
-              <button className="btn btn-danger" style={{ padding: '8px 14px', fontSize: 12 }}
+              <button className="btn btn-danger" style={{ padding: '8px 16px', fontSize: 13, fontWeight: 700 }}
                 disabled={!selected || saving} onClick={() => recordAction(a.key, 'fail')}>✗</button>
             </div>
           ))}
