@@ -143,6 +143,46 @@ function HighlightCard({ icon, title, playerMap, teamName, best }) {
   )
 }
 
+function PlayerActionBreakdown({ title, teamName, playerMap, color }) {
+  const rows = Object.values(playerMap).filter(p => p.total > 0).sort((a, b) => (b.rate ?? -1) - (a.rate ?? -1))
+  const cellStyle = (s, f) => {
+    const total = s + f
+    const rate = total > 0 ? s / total : null
+    return { color: rate === null ? 'var(--text-muted)' : rate >= 0.6 ? '#4ade80' : rate >= 0.4 ? 'var(--gold)' : '#ff6b6b', whiteSpace: 'nowrap' }
+  }
+  return (
+    <div className="card" style={{ padding: '18px 20px' }}>
+      <h3 style={{ fontSize: 15, color, marginBottom: 4 }}>{title} — {teamName}</h3>
+      <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12 }}>Success ✓ / Fail ✗ per action</p>
+      {rows.length === 0 ? (
+        <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>No player data yet.</p>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Player</th>
+                {ACTIONS.map(a => <th key={a.key}>{a.label}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(p => (
+                <tr key={p.name + p.jerseyNumber}>
+                  <td style={{ fontWeight: 600, color: '#fff', whiteSpace: 'nowrap' }}>{p.name}</td>
+                  {ACTIONS.map(a => {
+                    const { success, fail } = p.actions[a.key]
+                    return <td key={a.key} style={cellStyle(success, fail)}>{success}✓ / {fail}✗</td>
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function PerformanceResults({ match, onBack }) {
   const hasMultiSub = match.subMatches.length > 1
   const [scope, setScope] = useState(hasMultiSub ? 'all' : 0) // 'all' or sub-match index
@@ -231,9 +271,15 @@ export default function PerformanceResults({ match, onBack }) {
       </div>
 
       {/* Per-player tables */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
         <PlayerTable title="Player Stats" teamName={match.teamAName} playerMap={playerMapA} color="var(--gold)" />
         <PlayerTable title="Player Stats" teamName={match.teamBName} playerMap={playerMapB} color="#4ade80" />
+      </div>
+
+      {/* Per-player action breakdown (detailed) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <PlayerActionBreakdown title="Action Breakdown" teamName={match.teamAName} playerMap={playerMapA} color="var(--gold)" />
+        <PlayerActionBreakdown title="Action Breakdown" teamName={match.teamBName} playerMap={playerMapB} color="#4ade80" />
       </div>
     </div>
   )
