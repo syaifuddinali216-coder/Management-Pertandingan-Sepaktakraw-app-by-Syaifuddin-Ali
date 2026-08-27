@@ -42,13 +42,16 @@ export default function AuthPage() {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <img src={logo} alt="Sepaktakraw Game Management System" style={{ width: '100%', maxWidth: 340, height: 'auto', marginBottom: 4, display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
-          <p style={{ fontSize: 12, color: '#ffffff', fontFamily: 'var(--font-mono)', letterSpacing: 2 }}>
+          <p style={{ fontSize: 8.5, color: '#ffffff', fontFamily: 'var(--font-mono)', letterSpacing: 0.4, whiteSpace: 'nowrap' }}>
             By Datuk Abdul Halim Kader, BBM &amp; Syaifuddin Ali, S.Pd.
           </p>
         </div>
 
         <div className="card">
-          <h2 style={{ fontSize: 18, color: 'var(--white)', marginBottom: 20, textAlign: 'center' }}>Sign In</h2>
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <div className="tag-line" style={{ marginBottom: 6 }}>Welcome Back</div>
+            <h2 style={{ fontSize: 30, fontFamily: 'var(--font-display)', color: 'var(--gold)', letterSpacing: 1 }}>SIGN IN</h2>
+          </div>
 
           {error && (
             <div style={{ background: 'rgba(230,57,70,0.1)', border: '1px solid var(--red-card)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: 'var(--red-card)' }}>
