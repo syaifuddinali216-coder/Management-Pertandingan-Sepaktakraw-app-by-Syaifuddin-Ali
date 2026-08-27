@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import {
   signInWithPopup, signInWithEmailAndPassword,
-  createUserWithEmailAndPassword, updateProfile
 } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../firebase.js'
@@ -10,8 +9,7 @@ import logo from '../logo.png'
 const SECRET_CODE = 'Sepaktakraw Indonesia'
 
 export default function AuthPage() {
-  const [mode, setMode] = useState('login') // login | register
-  const [form, setForm] = useState({ name: '', email: '', password: '', code: '' })
+  const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -26,7 +24,7 @@ export default function AuthPage() {
       const snap = await getDoc(doc(db, 'users', user.uid))
       if (!snap.exists()) {
         // New Google user — need code
-        const code = prompt('Sign Inkan Access Code untuk mendaftar:')
+        const code = prompt('Masukkan Access Code untuk mendaftar:')
         if (code !== SECRET_CODE) {
           await auth.signOut()
           setError('Invalid access code. Contact administrator.')
@@ -55,24 +53,6 @@ export default function AuthPage() {
     setLoading(false)
   }
 
-  const handleRegister = async () => {
-    if (!form.name || !form.email || !form.password) return setError('All fields are required.')
-    if (form.code !== SECRET_CODE) return setError('Invalid access code. Contact administrator.')
-    if (form.password.length < 6) return setError('Password must be at least 6 characters.')
-    setLoading(true); setError('')
-    try {
-      const result = await createUserWithEmailAndPassword(auth, form.email, form.password)
-      await updateProfile(result.user, { displayName: form.name })
-      await setDoc(doc(db, 'users', result.user.uid), {
-        name: form.name, email: form.email, createdAt: new Date().toISOString(),
-      })
-    } catch (e) {
-      if (e.code === 'auth/email-already-in-use') setError('Email already registered.')
-      else setError('Registration failed: ' + e.message)
-    }
-    setLoading(false)
-  }
-
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -88,28 +68,11 @@ export default function AuthPage() {
         </div>
 
         <div className="card">
-          {/* Tab */}
-          <div style={{ display: 'flex', gap: 0, marginBottom: 28, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 4 }}>
-            {[['login','Sign In'],['register','Register']].map(([m, label]) => (
-              <button key={m} onClick={() => { setMode(m); setError('') }} style={{
-                flex: 1, padding: '8px', border: 'none', borderRadius: 6, cursor: 'pointer',
-                fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 14, transition: 'all 0.2s',
-                background: mode === m ? 'var(--green-mid)' : 'transparent',
-                color: mode === m ? 'var(--white)' : 'var(--gray-600)',
-              }}>{label}</button>
-            ))}
-          </div>
+          <h2 style={{ fontSize: 18, color: 'var(--white)', marginBottom: 20, textAlign: 'center' }}>Sign In</h2>
 
           {error && (
             <div style={{ background: 'rgba(230,57,70,0.1)', border: '1px solid var(--red-card)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: 'var(--red-card)' }}>
               {error}
-            </div>
-          )}
-
-          {mode === 'register' && (
-            <div className="form-group">
-              <label>Full Name</label>
-              <input placeholder="Nama kamu" value={form.name} onChange={e => set('name', e.target.value)} />
             </div>
           )}
 
@@ -120,21 +83,13 @@ export default function AuthPage() {
 
           <div className="form-group">
             <label>Password</label>
-            <input type="password" placeholder={mode === 'register' ? 'Min. 6 characters' : 'Your password'} value={form.password} onChange={e => set('password', e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && (mode === 'login' ? handleEmailLogin() : handleRegister())} />
+            <input type="password" placeholder="Your password" value={form.password} onChange={e => set('password', e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleEmailLogin()} />
           </div>
 
-          {mode === 'register' && (
-            <div className="form-group">
-              <label>Access Code</label>
-              <input placeholder="Sign Inkan kode kunci pendaftaran" value={form.code} onChange={e => set('code', e.target.value)} />
-              <p style={{ fontSize: 11, color: 'var(--gray-600)', marginTop: 4 }}>Contact Syaifuddin Ali to obtain the access code.</p>
-            </div>
-          )}
-
           <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '13px', fontSize: 15, marginBottom: 12 }}
-            onClick={mode === 'login' ? handleEmailLogin : handleRegister} disabled={loading}>
-            {loading ? <span className="spinner" /> : mode === 'login' ? 'Sign In' : 'Register Sekarang'}
+            onClick={handleEmailLogin} disabled={loading}>
+            {loading ? <span className="spinner" /> : 'Sign In'}
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
@@ -158,8 +113,11 @@ export default function AuthPage() {
               <path fill="#FBBC05" d="M4.51 10.53c-.16-.48-.25-.99-.25-1.53s.09-1.05.25-1.53V5.39H1.88A8 8 0 0 0 .98 9c0 1.29.31 2.51.9 3.61l2.63-2.08z"/>
               <path fill="#EA4335" d="M8.98 3.58c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 8.98 1a8 8 0 0 0-7.1 4.39l2.63 2.08c.63-1.89 2.39-3.29 4.47-3.29z"/>
             </svg>
-            {mode === 'login' ? 'Sign In dengan Google' : 'Register dengan Google'}
+            Sign In dengan Google
           </button>
+          <p style={{ fontSize: 11, color: 'var(--gray-600)', marginTop: 10, textAlign: 'center' }}>
+            Baru pertama kali? Sign In dengan Google, lalu masukkan Access Code saat diminta.
+          </p>
         </div>
 
         <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--gray-600)', marginTop: 24, fontFamily: 'var(--font-mono)' }}>
