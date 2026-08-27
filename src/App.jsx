@@ -6,6 +6,7 @@ import AuthPage from './pages/AuthPage.jsx'
 import MainApp from './pages/MainApp.jsx'
 import ScoreboardDisplay from './pages/ScoreboardDisplay.jsx'
 import logo from './logo.png'
+import istafLogo from './istaf-logo.png'
 
 export const AppContext = createContext(null)
 export const useApp = () => useContext(AppContext)
@@ -37,7 +38,7 @@ function AccessCodeGate({ pendingUser, onSubmit, onCancel, loading, error }) {
 
         <div className="card">
           <div style={{ textAlign: 'center', marginBottom: 8 }}>
-            <div className="tag-line" style={{ marginBottom: 6 }}>One More Step</div>
+            <img src={istafLogo} alt="ISTAF - International Sepaktakraw Federation" style={{ width: '100%', maxWidth: 200, height: 'auto', marginBottom: 14 }} />
             <h2 style={{ fontSize: 26, fontFamily: 'var(--font-display)', color: 'var(--gold)', letterSpacing: 1 }}>ACCESS CODE REQUIRED</h2>
           </div>
           <p style={{ fontSize: 13, color: 'var(--gray-600)', textAlign: 'center', marginBottom: 20 }}>
