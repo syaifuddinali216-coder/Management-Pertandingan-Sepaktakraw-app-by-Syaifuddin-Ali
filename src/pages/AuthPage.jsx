@@ -50,8 +50,14 @@ export default function AuthPage() {
 
         <div className="card">
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <img src={istafLogo} alt="ISTAF - International Sepaktakraw Federation" style={{ width: '100%', maxWidth: 200, height: 'auto', marginBottom: 14 }} />
-            <h2 style={{ fontSize: 30, fontFamily: 'var(--font-display)', color: 'var(--gold)', letterSpacing: 1 }}>SIGN IN</h2>
+            <img src={istafLogo} alt="ISTAF - International Sepaktakraw Federation" style={{ width: '100%', maxWidth: 230, height: 'auto', marginBottom: 16 }} />
+            <div style={{
+              display: 'inline-block', padding: '8px 30px', borderRadius: 999,
+              border: '1.5px solid rgba(255,215,0,0.5)', background: 'rgba(255,215,0,0.08)',
+            }}>
+              <h2 style={{ fontSize: 26, fontFamily: 'var(--font-display)', color: 'var(--gold)', letterSpacing: 2, margin: 0 }}>SIGN IN</h2>
+            </div>
+            <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,215,0,0.35), transparent)', marginTop: 20 }} />
           </div>
 
           {error && (
