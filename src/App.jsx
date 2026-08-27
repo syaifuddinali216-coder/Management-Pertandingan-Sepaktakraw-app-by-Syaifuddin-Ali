@@ -38,7 +38,7 @@ function AccessCodeGate({ pendingUser, onSubmit, onCancel, loading, error }) {
 
         <div className="card">
           <div style={{ textAlign: 'center', marginBottom: 8 }}>
-            <img src={istafLogo} alt="ISTAF - International Sepaktakraw Federation" style={{ width: '100%', maxWidth: 230, height: 'auto', marginBottom: 16 }} />
+            <img src={istafLogo} alt="ISTAF - International Sepaktakraw Federation" style={{ width: '100%', maxWidth: 230, height: 'auto', marginBottom: 16, display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
             <div style={{
               display: 'inline-block', padding: '8px 22px', borderRadius: 12,
               border: '1.5px solid rgba(255,215,0,0.5)', background: 'rgba(255,215,0,0.08)',
