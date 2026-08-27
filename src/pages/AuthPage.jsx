@@ -1,12 +1,7 @@
 import React, { useState } from 'react'
-import {
-  signInWithPopup, signInWithEmailAndPassword,
-} from 'firebase/auth'
-import { doc, setDoc, getDoc } from 'firebase/firestore'
-import { auth, db, googleProvider } from '../firebase.js'
+import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth'
+import { auth, googleProvider } from '../firebase.js'
 import logo from '../logo.png'
-
-const SECRET_CODE = 'Sepaktakraw Indonesia'
 
 export default function AuthPage() {
   const [form, setForm] = useState({ email: '', password: '' })
@@ -18,24 +13,9 @@ export default function AuthPage() {
   const handleGoogleLogin = async () => {
     setLoading(true); setError('')
     try {
-      const result = await signInWithPopup(auth, googleProvider)
-      const user = result.user
-      // Check if new user — if so, verify code
-      const snap = await getDoc(doc(db, 'users', user.uid))
-      if (!snap.exists()) {
-        // New Google user — need code
-        const code = prompt('Masukkan Access Code untuk mendaftar:')
-        if (code !== SECRET_CODE) {
-          await auth.signOut()
-          setError('Invalid access code. Contact administrator.')
-          setLoading(false); return
-        }
-        await setDoc(doc(db, 'users', user.uid), {
-          name: user.displayName,
-          email: user.email,
-          createdAt: new Date().toISOString(),
-        })
-      }
+      await signInWithPopup(auth, googleProvider)
+      // App.jsx takes over from here: checks whether this account has a
+      // profile yet, and shows the Access Code gate if not.
     } catch (e) {
       setError('Google sign in failed: ' + e.message)
     }
@@ -48,7 +28,7 @@ export default function AuthPage() {
     try {
       await signInWithEmailAndPassword(auth, form.email, form.password)
     } catch (e) {
-      setError('Email or password salah.')
+      setError('Incorrect email or password.')
     }
     setLoading(false)
   }
@@ -63,7 +43,7 @@ export default function AuthPage() {
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <img src={logo} alt="Sepaktakraw Game Management System" style={{ width: '100%', maxWidth: 340, height: 'auto', marginBottom: 4, display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
           <p style={{ fontSize: 12, color: '#ffffff', fontFamily: 'var(--font-mono)', letterSpacing: 2 }}>
-            by Syaifuddin Ali
+            By Datuk Abdul Halim Kader, BBM &amp; Syaifuddin Ali, S.Pd.
           </p>
         </div>
 
@@ -116,12 +96,12 @@ export default function AuthPage() {
             Sign In dengan Google
           </button>
           <p style={{ fontSize: 11, color: 'var(--gray-600)', marginTop: 10, textAlign: 'center' }}>
-            Baru pertama kali? Sign In dengan Google, lalu masukkan Access Code saat diminta.
+            First time here? Sign in with Google, then enter the Access Code when prompted.
           </p>
         </div>
 
         <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--gray-600)', marginTop: 24, fontFamily: 'var(--font-mono)' }}>
-          © 2025 Syaifuddin Ali · Sepaktakraw Game Management System
+          © 2026 Game Management System
         </p>
       </div>
     </div>
