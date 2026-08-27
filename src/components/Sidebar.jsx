@@ -27,7 +27,7 @@ export default function Sidebar({ currentPage, onLogout }) {
     }}>
       <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,215,0,0.12)' }}>
         <img src={logo} alt="Sepaktakraw Game Management System" style={{ width: '100%', height: 'auto', display: 'block' }} />
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 8, fontStyle: 'italic' }}>by Syaifuddin Ali</div>
+        <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.35)', marginTop: 8, fontStyle: 'italic', lineHeight: 1.4 }}>By Datuk Abdul Halim Kader, BBM &amp; Syaifuddin Ali, S.Pd.</div>
       </div>
       <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,215,0,0.4), transparent)' }} />
       <div style={{ padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
