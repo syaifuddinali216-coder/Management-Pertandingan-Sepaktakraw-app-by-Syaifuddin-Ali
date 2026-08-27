@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth'
 import { auth, googleProvider } from '../firebase.js'
 import logo from '../logo.png'
+import istafLogo from '../istaf-logo.png'
 
 export default function AuthPage() {
   const [form, setForm] = useState({ email: '', password: '' })
@@ -49,7 +50,7 @@ export default function AuthPage() {
 
         <div className="card">
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <div className="tag-line" style={{ marginBottom: 6 }}>Welcome Back</div>
+            <img src={istafLogo} alt="ISTAF - International Sepaktakraw Federation" style={{ width: '100%', maxWidth: 200, height: 'auto', marginBottom: 14 }} />
             <h2 style={{ fontSize: 30, fontFamily: 'var(--font-display)', color: 'var(--gold)', letterSpacing: 1 }}>SIGN IN</h2>
           </div>
 
