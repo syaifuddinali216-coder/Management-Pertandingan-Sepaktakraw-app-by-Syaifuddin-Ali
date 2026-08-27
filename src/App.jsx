@@ -30,13 +30,16 @@ function AccessCodeGate({ pendingUser, onSubmit, onCancel, loading, error }) {
       <div style={{ width: '100%', maxWidth: 420 }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <img src={logo} alt="Sepaktakraw Game Management System" style={{ width: '100%', maxWidth: 340, height: 'auto', marginBottom: 4, display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
-          <p style={{ fontSize: 12, color: '#ffffff', fontFamily: 'var(--font-mono)', letterSpacing: 2 }}>
+          <p style={{ fontSize: 8.5, color: '#ffffff', fontFamily: 'var(--font-mono)', letterSpacing: 0.4, whiteSpace: 'nowrap' }}>
             By Datuk Abdul Halim Kader, BBM &amp; Syaifuddin Ali, S.Pd.
           </p>
         </div>
 
         <div className="card">
-          <h2 style={{ fontSize: 18, color: 'var(--white)', marginBottom: 8, textAlign: 'center' }}>Access Code Required</h2>
+          <div style={{ textAlign: 'center', marginBottom: 8 }}>
+            <div className="tag-line" style={{ marginBottom: 6 }}>One More Step</div>
+            <h2 style={{ fontSize: 26, fontFamily: 'var(--font-display)', color: 'var(--gold)', letterSpacing: 1 }}>ACCESS CODE REQUIRED</h2>
+          </div>
           <p style={{ fontSize: 13, color: 'var(--gray-600)', textAlign: 'center', marginBottom: 20 }}>
             Signed in as <strong style={{ color: 'var(--gold)' }}>{pendingUser?.email}</strong>. This looks like your first time here — enter the Access Code to continue.
           </p>
