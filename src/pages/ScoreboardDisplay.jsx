@@ -35,6 +35,63 @@ export default function ScoreboardDisplay() {
   const activeSet = data.sets[data.currentSet]
   const timerLow = data.timerRunning && remainingSeconds <= 10
 
+  // ── Challenge: dedicated full-screen layout, not squeezed into the ──
+  // regular scoreboard box, so both the type label and the verdict can
+  // be as large and dramatic as possible on the TV.
+  if (data.challengeType) {
+    const opt = data.challengeResult
+      ? CHALLENGE_TYPES[data.challengeType].options.find(o => o.value === data.challengeResult)
+      : null
+    return (
+      <div style={{
+        minHeight: '100vh', width: '100vw', background: 'radial-gradient(ellipse at center, #1a0a2e 0%, #0a0515 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'var(--font-body)', overflow: 'hidden', padding: '2vh 2vw', boxSizing: 'border-box',
+      }}>
+        <div style={{
+          width: '94vw', minHeight: '86vh', border: '5px solid #FFD700', borderRadius: 26,
+          background: 'rgba(0,0,0,0.35)', boxShadow: '0 0 90px rgba(255,215,0,0.2)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '2vh 2vw', boxSizing: 'border-box',
+        }}>
+          {data.eventTitle && (
+            <div style={{
+              fontFamily: 'var(--font-display)', fontSize: '2.3vw', color: '#fff',
+              letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', opacity: 0.75,
+              textShadow: '0 0 20px rgba(255,215,0,0.4)', marginBottom: '3vh',
+            }}>
+              {data.eventTitle}
+            </div>
+          )}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+            {!opt ? (
+              <div style={{
+                fontFamily: 'var(--font-display)', fontSize: '8.5vw', color: '#FFD700',
+                letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center',
+                textShadow: '0 0 50px rgba(255,215,0,0.8), 0 0 110px rgba(255,215,0,0.5)',
+                animation: 'sbPulse 1.4s infinite',
+              }}>
+                {CHALLENGE_TYPES[data.challengeType].label}
+              </div>
+            ) : (
+              <div style={{
+                fontFamily: 'var(--font-display)', fontSize: '17vw', color: opt.color,
+                letterSpacing: 3, textTransform: 'uppercase', textAlign: 'center',
+                textShadow: `0 0 60px ${opt.color}, 0 0 130px ${opt.color}`,
+              }}>
+                {opt.label}
+              </div>
+            )}
+          </div>
+        </div>
+        <style>{`
+          @keyframes sbPulse { 0%,100% { opacity: 1 } 50% { opacity: 0.5 } }
+          body { margin: 0; }
+        `}</style>
+      </div>
+    )
+  }
+
   return (
     <div style={{
       minHeight: '100vh', width: '100vw', background: 'radial-gradient(ellipse at center, #1a0a2e 0%, #0a0515 100%)',
@@ -61,41 +118,15 @@ export default function ScoreboardDisplay() {
           </div>
         )}
 
-        {data.challengeType ? (
-          /* Challenge overlay — replaces the score row while a challenge is active */
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '34vh' }}>
-            {!data.challengeResult ? (
-              <div style={{
-                fontFamily: 'var(--font-display)', fontSize: '7vw', color: '#FFD700',
-                letterSpacing: 4, textTransform: 'uppercase', textAlign: 'center',
-                textShadow: '0 0 40px rgba(255,215,0,0.7), 0 0 90px rgba(255,215,0,0.4)',
-              }}>
-                {CHALLENGE_TYPES[data.challengeType].label}
-              </div>
-            ) : (() => {
-              const opt = CHALLENGE_TYPES[data.challengeType].options.find(o => o.value === data.challengeResult)
-              return (
-                <div style={{
-                  fontFamily: 'var(--font-display)', fontSize: '10vw', color: opt?.color || '#fff',
-                  letterSpacing: 4, textTransform: 'uppercase', textAlign: 'center',
-                  textShadow: `0 0 50px ${opt?.color}, 0 0 100px ${opt?.color}`,
-                }}>
-                  {opt?.label}
-                </div>
-              )
-            })()}
-          </div>
-        ) : (
-          <>
-            {/* Set indicator */}
-            <div style={{ textAlign: 'center', marginBottom: '2.2vh' }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '2vw', letterSpacing: 4, color: '#FFD700', fontWeight: 700, textTransform: 'uppercase' }}>
-                ● LIVE &nbsp;·&nbsp; SET {data.currentSet + 1} / 3
-              </span>
-            </div>
+        {/* Set indicator */}
+        <div style={{ textAlign: 'center', marginBottom: '2.2vh' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '2vw', letterSpacing: 4, color: '#FFD700', fontWeight: 700, textTransform: 'uppercase' }}>
+            ● LIVE &nbsp;·&nbsp; SET {data.currentSet + 1} / 3
+          </span>
+        </div>
 
-            {/* Main scoreboard row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '2vw' }}>
+        {/* Main scoreboard row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '2vw' }}>
 
           {/* Team A */}
           <div style={{ textAlign: 'center' }}>
@@ -151,8 +182,6 @@ export default function ScoreboardDisplay() {
             </div>
           </div>
         </div>
-          </>
-        )}
       </div>
 
       <style>{`
