@@ -34,6 +34,12 @@ const calcSetResult = (sets) => {
   return { homeSetWins: hw, awaySetWins: aw }
 }
 
+// "15-3, 15-6, 15-7" — used under the final score to show how each set went
+const formatSetScores = (sets) => (sets || [])
+  .filter(s => s && s.home !== '' && s.home !== undefined && s.away !== '' && s.away !== undefined)
+  .map(s => `${s.home}-${s.away}`)
+  .join(', ')
+
 function SetScoreInput({ sets, onChange, homeLabel, awayLabel, homeLogo, awayLogo }) {
   return (
     <div>
@@ -852,8 +858,15 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
                                 <TeamLogo src={getTeamLogo(match.homeId)} name={getTeamName(match.homeId)} size={20} />
                                 {getTeamName(match.homeId)}
                               </div>
-                              <div style={{ textAlign: 'center', minWidth: 60 }}>
-                                {match.status === 'done' ? <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#FFD700', fontSize: 14 }}>{hw} — {aw}</span> : <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>vs</span>}
+                              <div style={{ textAlign: 'center', minWidth: 70 }}>
+                                {match.status === 'done' ? (
+                                  <>
+                                    <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#FFD700', fontSize: 14 }}>{hw} — {aw}</div>
+                                    {formatSetScores(match.sets) && (
+                                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: 'rgba(255,255,255,0.45)', marginTop: 1, whiteSpace: 'nowrap' }}>{formatSetScores(match.sets)}</div>
+                                    )}
+                                  </>
+                                ) : <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>vs</span>}
                               </div>
                               <div style={{ flex: 1, fontSize: 12, fontWeight: 600, textAlign: 'right', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
                                 {getTeamName(match.awayId)}
