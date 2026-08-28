@@ -230,6 +230,8 @@ const emptyScoreboard = {
   timerEndAt: null,      // epoch ms — valid while timerRunning
   timerRemaining: 0,     // seconds — valid while paused/stopped
   timerLabel: '',
+  challengeType: null,   // 'line' | 'net' | 'service' | null
+  challengeResult: null, // e.g. 'in' | 'out' | 'notover' | 'over' | 'notfault' | 'fault' | null
 }
 
 export function useScoreboard() {
