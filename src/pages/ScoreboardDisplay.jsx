@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useScoreboard } from '../hooks/useFirestore.js'
 import TeamLogo from '../components/TeamLogo.jsx'
+import { CHALLENGE_TYPES } from '../utils/challengeTypes.js'
 
 function formatTime(totalSeconds) {
   const s = Math.max(0, Math.round(totalSeconds))
@@ -60,15 +61,41 @@ export default function ScoreboardDisplay() {
           </div>
         )}
 
-        {/* Set indicator */}
-        <div style={{ textAlign: 'center', marginBottom: '2.2vh' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '2vw', letterSpacing: 4, color: '#FFD700', fontWeight: 700, textTransform: 'uppercase' }}>
-            ● LIVE &nbsp;·&nbsp; SET {data.currentSet + 1} / 3
-          </span>
-        </div>
+        {data.challengeType ? (
+          /* Challenge overlay — replaces the score row while a challenge is active */
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '34vh' }}>
+            {!data.challengeResult ? (
+              <div style={{
+                fontFamily: 'var(--font-display)', fontSize: '7vw', color: '#FFD700',
+                letterSpacing: 4, textTransform: 'uppercase', textAlign: 'center',
+                textShadow: '0 0 40px rgba(255,215,0,0.7), 0 0 90px rgba(255,215,0,0.4)',
+              }}>
+                {CHALLENGE_TYPES[data.challengeType].label}
+              </div>
+            ) : (() => {
+              const opt = CHALLENGE_TYPES[data.challengeType].options.find(o => o.value === data.challengeResult)
+              return (
+                <div style={{
+                  fontFamily: 'var(--font-display)', fontSize: '10vw', color: opt?.color || '#fff',
+                  letterSpacing: 4, textTransform: 'uppercase', textAlign: 'center',
+                  textShadow: `0 0 50px ${opt?.color}, 0 0 100px ${opt?.color}`,
+                }}>
+                  {opt?.label}
+                </div>
+              )
+            })()}
+          </div>
+        ) : (
+          <>
+            {/* Set indicator */}
+            <div style={{ textAlign: 'center', marginBottom: '2.2vh' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '2vw', letterSpacing: 4, color: '#FFD700', fontWeight: 700, textTransform: 'uppercase' }}>
+                ● LIVE &nbsp;·&nbsp; SET {data.currentSet + 1} / 3
+              </span>
+            </div>
 
-        {/* Main scoreboard row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '2vw' }}>
+            {/* Main scoreboard row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '2vw' }}>
 
           {/* Team A */}
           <div style={{ textAlign: 'center' }}>
@@ -124,6 +151,8 @@ export default function ScoreboardDisplay() {
             </div>
           </div>
         </div>
+          </>
+        )}
       </div>
 
       <style>{`
