@@ -24,6 +24,12 @@ const calcSubResult = (sets) => {
   return { homeSetWins: hw, awaySetWins: aw }
 }
 
+// "15-3, 15-6, 15-7" — used under the sub-match score to show how each set went
+const formatSetScores = (sets) => (sets || [])
+  .filter(s => s && s.home !== '' && s.home !== undefined && s.away !== '' && s.away !== undefined)
+  .map(s => `${s.home}-${s.away}`)
+  .join(', ')
+
 // Hitung pemenang team match (dari 3 sub-match)
 const calcTeamMatchResult = (subMatches) => {
   let homeWins = 0, awayWins = 0
@@ -523,11 +529,17 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                               {/* Show sub-match detail if done */}
                               {match.status === 'done' && (match.subMatches || []).map((sub, si) => {
                                 const { homeSetWins: shw, awaySetWins: saw } = calcSubResult(sub.sets)
+                                const setLine = formatSetScores(sub.sets)
                                 return (
-                                  <div key={si} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.5)', paddingLeft: 8, fontFamily: 'var(--font-mono)' }}>
-                                    <span>{getSubName(match.homeId, si+1)}</span>
-                                    <span style={{ color: shw > saw ? '#4ade80' : saw > shw ? '#ff9999' : 'rgba(255,255,255,0.4)' }}>{shw}-{saw}</span>
-                                    <span>{getSubName(match.awayId, si+1)}</span>
+                                  <div key={si} style={{ paddingLeft: 8 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)' }}>
+                                      <span>{getSubName(match.homeId, si+1)}</span>
+                                      <span style={{ color: shw > saw ? '#4ade80' : saw > shw ? '#ff9999' : 'rgba(255,255,255,0.4)' }}>{shw}-{saw}</span>
+                                      <span>{getSubName(match.awayId, si+1)}</span>
+                                    </div>
+                                    {setLine && (
+                                      <div style={{ textAlign: 'center', fontSize: 9.5, color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-mono)' }}>{setLine}</div>
+                                    )}
                                   </div>
                                 )
                               })}
