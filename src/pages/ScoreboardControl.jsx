@@ -3,6 +3,7 @@ import { useApp } from '../App.jsx'
 import { useScoreboard } from '../hooks/useFirestore.js'
 import TeamLogo from '../components/TeamLogo.jsx'
 import { compressImage } from '../utils/imageCompress.js'
+import { CHALLENGE_TYPES } from '../utils/challengeTypes.js'
 
 const TIMER_PRESETS = [
   { label: 'Time Out', seconds: 60 },
@@ -61,8 +62,14 @@ export default function ScoreboardControl() {
     const sets = data.sets.map((s, i) => i !== data.currentSet ? s : {
       ...s, [team]: Math.max(0, s[team] + delta)
     })
-    save({ sets })
+    // Any score action means play has resumed — clear the challenge overlay
+    // on the TV automatically, so nobody has to remember to dismiss it.
+    save({ sets, challengeType: null, challengeResult: null })
   }
+
+  const startChallenge = (type) => save({ challengeType: type, challengeResult: null })
+  const setChallengeResult = (value) => save({ challengeResult: value })
+  const clearChallenge = () => save({ challengeType: null, challengeResult: null })
 
   const nextSet = () => {
     if (data.currentSet >= 2) return showToast('Sudah di set terakhir (Set 3)!')
@@ -230,6 +237,53 @@ export default function ScoreboardControl() {
           )}
           <button className="btn btn-danger" style={{ fontSize: 13 }} onClick={resetTimer}>⏹ Reset Timer</button>
         </div>
+      </div>
+
+      {/* Challenge */}
+      <div className="card" style={{ padding: '18px 22px', marginTop: 20 }}>
+        <h2 style={{ fontSize: 16, color: 'var(--white)', marginBottom: 14 }}>🚩 Challenge</h2>
+
+        {!data.challengeType ? (
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {Object.entries(CHALLENGE_TYPES).map(([key, cfg]) => (
+              <button key={key} className="btn btn-primary" style={{ fontSize: 13, padding: '11px 20px' }} onClick={() => startChallenge(key)}>
+                {cfg.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div>
+            <div style={{ textAlign: 'center', marginBottom: 16, fontSize: 13, color: 'var(--text-muted)' }}>
+              Active: <strong style={{ color: 'var(--gold)' }}>{CHALLENGE_TYPES[data.challengeType].label}</strong>
+              {data.challengeResult && (
+                <> · Result: <strong style={{ color: CHALLENGE_TYPES[data.challengeType].options.find(o => o.value === data.challengeResult)?.color }}>
+                  {CHALLENGE_TYPES[data.challengeType].options.find(o => o.value === data.challengeResult)?.label}
+                </strong></>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 14 }}>
+              {CHALLENGE_TYPES[data.challengeType].options.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setChallengeResult(opt.value)}
+                  style={{
+                    padding: '12px 26px', fontSize: 14, fontWeight: 700, borderRadius: 8, cursor: 'pointer',
+                    border: `2px solid ${opt.color}`,
+                    background: data.challengeResult === opt.value ? opt.color : 'transparent',
+                    color: data.challengeResult === opt.value ? '#0a1a0a' : opt.color,
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={clearChallenge}>← Back to Score</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
