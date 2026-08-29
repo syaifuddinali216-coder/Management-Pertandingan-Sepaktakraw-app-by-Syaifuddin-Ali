@@ -222,6 +222,7 @@ export function useTeamDataTeams(eventId, category) {
 // useTeams/useTeamDataTeams — since a scoreboard match can be any game.
 const emptyScoreboard = {
   eventTitle: '',
+  courtName: '',
   teamAName: 'TEAM A', teamALogo: '',
   teamBName: 'TEAM B', teamBLogo: '',
   sets: [{ a: 0, b: 0 }, { a: 0, b: 0 }, { a: 0, b: 0 }],
