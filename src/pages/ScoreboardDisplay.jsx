@@ -111,29 +111,30 @@ export default function ScoreboardDisplay() {
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       fontFamily: 'var(--font-body)', overflow: 'hidden', padding: '3vh 3vw', boxSizing: 'border-box',
     }}>
-      <div style={{ width: '100%', maxWidth: 1650, border: '4px solid #FFD700', borderRadius: 22, background: 'rgba(0,0,0,0.35)', boxShadow: '0 0 60px rgba(255,215,0,0.15)', padding: '3.5vh 3.2vw' }}>
+      <div style={{ width: '94vw', border: '4px solid #FFD700', borderRadius: 22, background: 'rgba(0,0,0,0.35)', boxShadow: '0 0 60px rgba(255,215,0,0.15)', padding: '3.5vh 3.2vw', boxSizing: 'border-box' }}>
 
-        {/* Event title banner */}
+        {/* Event title banner — same bordered badge style as the Challenge screen */}
         {data.eventTitle && (
-          <div style={{
-            textAlign: 'center', marginBottom: '2.5vh', paddingBottom: '2vh',
-            borderBottom: '2px solid rgba(255,215,0,0.3)',
-          }}>
+          <div style={{ textAlign: 'center', marginBottom: '3vh' }}>
             <div style={{
-              fontFamily: 'var(--font-display)', fontSize: '2.9vw', color: '#fff',
-              letterSpacing: 3, textTransform: 'uppercase', lineHeight: 1.15,
-              textShadow: '0 0 25px rgba(255,215,0,0.5), 0 2px 8px rgba(0,0,0,0.6)',
-              background: 'linear-gradient(180deg, #ffffff 0%, #FFE855 60%, #FFD700 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              display: 'inline-block', padding: '1.2vh 2.6vw',
+              border: '2px solid rgba(255,215,0,0.5)', borderRadius: 14,
+              background: 'rgba(255,215,0,0.07)',
             }}>
-              {data.eventTitle}
+              <span style={{
+                fontFamily: 'var(--font-display)', fontSize: '2.9vw', color: '#fff',
+                letterSpacing: 2, textTransform: 'uppercase',
+                textShadow: '0 0 20px rgba(255,215,0,0.4)',
+              }}>
+                {data.eventTitle}
+              </span>
             </div>
           </div>
         )}
 
         {/* Set indicator */}
-        <div style={{ textAlign: 'center', marginBottom: '2.2vh' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '2vw', letterSpacing: 4, color: '#FFD700', fontWeight: 700, textTransform: 'uppercase' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.4vh' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '2.3vw', letterSpacing: 4, color: '#FFD700', fontWeight: 700, textTransform: 'uppercase' }}>
             ● LIVE &nbsp;·&nbsp; SET {data.currentSet + 1} / 3
           </span>
         </div>
@@ -143,23 +144,23 @@ export default function ScoreboardDisplay() {
 
           {/* Team A */}
           <div style={{ textAlign: 'center' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.8vh' }}>
-              <TeamLogo src={data.teamALogo} name={data.teamAName} size={155} />
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2vh' }}>
+              <TeamLogo src={data.teamALogo} name={data.teamAName} size={185} />
             </div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '3.9vw', color: '#fff', letterSpacing: 2, marginBottom: '1.2vh', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '4.4vw', color: '#fff', letterSpacing: 2, marginBottom: '1.3vh', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
               {data.teamAName || 'TEAM A'}
             </div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5vw', fontWeight: 800, color: '#FFD700', lineHeight: 1, textShadow: '0 0 30px rgba(255,215,0,0.5)' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '13vw', fontWeight: 800, color: '#FFD700', lineHeight: 1, textShadow: '0 0 30px rgba(255,215,0,0.5)' }}>
               {activeSet.a}
             </div>
           </div>
 
           {/* Center: sets summary + timer */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2.2vh', minWidth: '16vw' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2.4vh', minWidth: '17vw' }}>
             {data.sets.map((s, i) => (
               <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: '0.9vw',
-                fontFamily: 'var(--font-mono)', fontSize: i === data.currentSet ? '1.7vw' : '1.25vw',
+                display: 'flex', alignItems: 'center', gap: '1vw',
+                fontFamily: 'var(--font-mono)', fontSize: i === data.currentSet ? '2vw' : '1.5vw',
                 color: i === data.currentSet ? '#FFD700' : 'rgba(255,255,255,0.45)',
                 fontWeight: i === data.currentSet ? 800 : 500,
               }}>
@@ -168,7 +169,7 @@ export default function ScoreboardDisplay() {
               </div>
             ))}
             <div style={{
-              marginTop: '1vh', fontFamily: 'var(--font-mono)', fontSize: '3.1vw', fontWeight: 800,
+              marginTop: '1vh', fontFamily: 'var(--font-mono)', fontSize: '3.6vw', fontWeight: 800,
               color: timerLow ? '#ff3b3b' : '#4ade80',
               textShadow: timerLow ? '0 0 20px rgba(255,59,59,0.6)' : '0 0 20px rgba(74,222,128,0.5)',
               animation: timerLow ? 'sbPulse 1s infinite' : 'none',
@@ -176,7 +177,7 @@ export default function ScoreboardDisplay() {
               {formatTime(remainingSeconds)}
             </div>
             {data.timerLabel && (
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.1vw', color: 'rgba(255,255,255,0.5)', letterSpacing: 2, textTransform: 'uppercase', marginTop: '-1.2vh' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.3vw', color: 'rgba(255,255,255,0.5)', letterSpacing: 2, textTransform: 'uppercase', marginTop: '-1.2vh' }}>
                 {data.timerLabel}
               </div>
             )}
@@ -184,13 +185,13 @@ export default function ScoreboardDisplay() {
 
           {/* Team B */}
           <div style={{ textAlign: 'center' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.8vh' }}>
-              <TeamLogo src={data.teamBLogo} name={data.teamBName} size={155} />
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2vh' }}>
+              <TeamLogo src={data.teamBLogo} name={data.teamBName} size={185} />
             </div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '3.9vw', color: '#fff', letterSpacing: 2, marginBottom: '1.2vh', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '4.4vw', color: '#fff', letterSpacing: 2, marginBottom: '1.3vh', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
               {data.teamBName || 'TEAM B'}
             </div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5vw', fontWeight: 800, color: '#FFD700', lineHeight: 1, textShadow: '0 0 30px rgba(255,215,0,0.5)' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '13vw', fontWeight: 800, color: '#FFD700', lineHeight: 1, textShadow: '0 0 30px rgba(255,215,0,0.5)' }}>
               {activeSet.b}
             </div>
           </div>
