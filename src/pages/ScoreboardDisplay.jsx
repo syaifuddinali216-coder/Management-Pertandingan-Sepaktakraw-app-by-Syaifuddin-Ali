@@ -37,11 +37,16 @@ export default function ScoreboardDisplay() {
 
   // ── Challenge: dedicated full-screen layout, not squeezed into the ──
   // regular scoreboard box, so both the type label and the verdict can
-  // be as large and dramatic as possible on the TV.
+  // be as large and dramatic as possible on the TV. Multi-word labels
+  // (CHALLENGE LINE, NOT OVER, etc.) are stacked one word per line so
+  // each word can be sized much bigger than a single-line layout allows.
   if (data.challengeType) {
     const opt = data.challengeResult
       ? CHALLENGE_TYPES[data.challengeType].options.find(o => o.value === data.challengeResult)
       : null
+    const typeWords = CHALLENGE_TYPES[data.challengeType].label.split(' ') // always 2 words: "CHALLENGE" + type
+    const resultFontSize = '16vw'
+
     return (
       <div style={{
         minHeight: '100vh', width: '100vw', background: 'radial-gradient(ellipse at center, #1a0a2e 0%, #0a0515 100%)',
@@ -56,27 +61,35 @@ export default function ScoreboardDisplay() {
         }}>
           {data.eventTitle && (
             <div style={{
-              fontFamily: 'var(--font-display)', fontSize: '2.3vw', color: '#fff',
-              letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', opacity: 0.75,
-              textShadow: '0 0 20px rgba(255,215,0,0.4)', marginBottom: '3vh',
+              display: 'inline-block', marginBottom: '3vh', padding: '1.2vh 2.6vw',
+              border: '2px solid rgba(255,215,0,0.5)', borderRadius: 14,
+              background: 'rgba(255,215,0,0.07)',
             }}>
-              {data.eventTitle}
+              <span style={{
+                fontFamily: 'var(--font-display)', fontSize: '2.3vw', color: '#fff',
+                letterSpacing: 2, textTransform: 'uppercase',
+                textShadow: '0 0 20px rgba(255,215,0,0.4)',
+              }}>
+                {data.eventTitle}
+              </span>
             </div>
           )}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
             {!opt ? (
-              <div style={{
-                fontFamily: 'var(--font-display)', fontSize: '8.5vw', color: '#FFD700',
-                letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center',
-                textShadow: '0 0 50px rgba(255,215,0,0.8), 0 0 110px rgba(255,215,0,0.5)',
-                animation: 'sbPulse 1.4s infinite',
-              }}>
-                {CHALLENGE_TYPES[data.challengeType].label}
-              </div>
+              typeWords.map((w, i) => (
+                <div key={i} style={{
+                  fontFamily: 'var(--font-display)', fontSize: '16vw', color: '#FFD700',
+                  letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.05,
+                  textShadow: '0 0 50px rgba(255,215,0,0.8), 0 0 110px rgba(255,215,0,0.5)',
+                  animation: 'sbPulse 1.4s infinite',
+                }}>
+                  {w}
+                </div>
+              ))
             ) : (
               <div style={{
-                fontFamily: 'var(--font-display)', fontSize: '17vw', color: opt.color,
-                letterSpacing: 3, textTransform: 'uppercase', textAlign: 'center',
+                fontFamily: 'var(--font-display)', fontSize: resultFontSize, color: opt.color,
+                letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.05,
                 textShadow: `0 0 60px ${opt.color}, 0 0 130px ${opt.color}`,
               }}>
                 {opt.label}
