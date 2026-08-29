@@ -110,7 +110,9 @@ export default function ScoreboardControl() {
   }
 
   const openDisplay = () => {
-    const url = window.location.origin + window.location.pathname + '?display=scoreboard'
+    const params = new URLSearchParams({ display: 'scoreboard' })
+    if (data.courtName?.trim()) params.set('court', data.courtName.trim())
+    const url = window.location.origin + window.location.pathname + '?' + params.toString()
     window.open(url, '_blank', 'noopener')
   }
 
@@ -136,8 +138,15 @@ export default function ScoreboardControl() {
         Klik "Buka Tampilan TV" untuk membuka tab baru — geser tab itu ke layar TV (extend display), lalu tekan F11 untuk full-screen. Semua perubahan di panel ini akan langsung muncul di TV secara real-time.
       </p>
 
-      {/* Event title */}
+      {/* Court name + Event title */}
       <div className="card" style={{ padding: '16px 20px', marginBottom: 20 }}>
+        <label style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Nama Lapangan (bikin link TV ini beda dari lapangan lain)</label>
+        <input
+          value={data.courtName}
+          onChange={e => save({ courtName: e.target.value })}
+          placeholder="Contoh: Lapangan 1"
+          style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}
+        />
         <label style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Judul Event (tampil di TV)</label>
         <input
           value={data.eventTitle}
