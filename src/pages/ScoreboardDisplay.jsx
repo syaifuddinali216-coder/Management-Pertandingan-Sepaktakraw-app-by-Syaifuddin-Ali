@@ -15,6 +15,16 @@ export default function ScoreboardDisplay() {
   const [, forceTick] = useState(0)
 
   useEffect(() => {
+    // Reflect the court name (and event title if set) in the browser tab
+    // title, so it's easy to tell tabs apart when multiple courts are
+    // running side by side.
+    const courtLabel = data.courtName?.trim()
+    document.title = courtLabel
+      ? `${courtLabel} — Live Scoreboard`
+      : 'Live Scoreboard — Sepaktakraw GMS'
+  }, [data.courtName])
+
+  useEffect(() => {
     if (!data.timerRunning) return
     const iv = setInterval(() => forceTick(t => t + 1), 250)
     return () => clearInterval(iv)
