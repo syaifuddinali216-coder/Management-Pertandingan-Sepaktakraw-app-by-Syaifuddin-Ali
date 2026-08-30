@@ -421,7 +421,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
           <div className="card">
             <div style={{ marginBottom: 14, fontSize: 12, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: 1 }}>{teams.length} tim terdaftar</div>
             <table>
-              <thead><tr><th>#</th><th>Kode</th><th>Team Name</th><th>Asal</th><th>Sub-Tim</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>#</th><th>Kode</th><th>Team Name</th><th>Region</th><th>Sub-Tim</th><th>Aksi</th></tr></thead>
               <tbody>
                 {teams.map((t, i) => (
                   <tr key={t.id}>
