@@ -243,7 +243,7 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <div style={{ fontSize: 13, color: 'var(--gray-600)' }}>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
           {koMatches.length === 0 ? 'Bracket belum dibuat.' : `${koMatches.filter(m => m.status === 'done').length}/${koMatches.length} match selesai`}
         </div>
         <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: 13 }} onClick={() => { setSelectedTeams(suggested.filter(s => s.pos < 2).map(s => s.team)); setShowSetup(true) }}>
@@ -488,7 +488,7 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
         <div className="modal-overlay" onClick={() => setShowSetup(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
             <h2>SETUP KNOCKOUT BRACKET</h2>
-            <p style={{ color: 'var(--gray-600)', marginBottom: 16, fontSize: 14 }}>Select teams advancing to knockout:</p>
+            <p style={{ color: 'var(--text-muted)', marginBottom: 16, fontSize: 14 }}>Select teams advancing to knockout:</p>
             {suggested.length > 0 && (
               <div style={{ background: 'rgba(82,183,136,0.08)', border: '1px solid rgba(82,183,136,0.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 12, color: 'var(--green-accent)' }}>
                 ✓ Auto-selected: Top 2 from each pool dari hasil klasemen
@@ -502,7 +502,7 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
                   <div key={team.id} onClick={() => setSelectedTeams(prev => prev.some(t => t.id === team.id) ? prev.filter(t => t.id !== team.id) : [...prev, team])}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, cursor: 'pointer', border: `1px solid ${isSelected ? 'var(--gold)' : 'rgba(64,145,108,0.2)'}`, background: isSelected ? 'rgba(244,160,28,0.08)' : 'rgba(255,255,255,0.02)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${isSelected ? 'var(--gold)' : 'var(--gray-600)'}`, background: isSelected ? 'var(--gold)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--dark)', fontWeight: 700 }}>{isSelected && '✓'}</div>
+                      <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${isSelected ? 'var(--gold)' : 'var(--text-muted)'}`, background: isSelected ? 'var(--gold)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--purple-deep)', fontWeight: 700 }}>{isSelected && '✓'}</div>
                       <span style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>{team.name}</span>
                     </div>
                     {sug && <span style={{ fontSize: 11, color: sug.pos === 0 ? 'var(--gold)' : 'var(--green-accent)', fontFamily: 'var(--font-mono)' }}>{sug.label}</span>}
@@ -510,7 +510,7 @@ function KnockoutTab({ teams, matches, addMatch, updateMatch, deleteMatch, showT
                 )
               })}
             </div>
-            <p style={{ fontSize: 12, color: 'var(--gray-600)', marginBottom: 16 }}>{selectedTeams.length} teams selected</p>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>{selectedTeams.length} teams selected</p>
             <div style={{ display: 'flex', gap: 12 }}>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={setupKnockout}>Create Bracket</button>
               <button className="btn btn-ghost" onClick={() => setShowSetup(false)}>Cancel</button>
@@ -713,7 +713,7 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, fontSize: 13, color: 'var(--text-muted)' }}>
-        <span style={{ cursor: 'pointer', color: 'var(--green-field)', fontWeight: 600 }} onClick={onBack}>← {event?.name}</span>
+        <span style={{ cursor: 'pointer', color: 'var(--gold)', fontWeight: 600 }} onClick={onBack}>← {event?.name}</span>
         <span>›</span>
         <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{nomor?.name}</span>
       </div>
@@ -721,20 +721,20 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
         <div>
           <div className="tag-line" style={{ marginBottom: 6 }}>Match Number</div>
-          <h1 style={{ fontSize: 38, color: 'var(--green-field)' }}>{nomor?.name?.toUpperCase()}</h1>
+          <h1 style={{ fontSize: 38, color: 'var(--gold)' }}>{nomor?.name?.toUpperCase()}</h1>
         </div>
         {tab === 'teams' && <button className="btn btn-primary" onClick={openAddTeam}>+ Add Team</button>}
         {tab === 'groups' && <button className="btn btn-primary" onClick={() => setShowGroupSetup(true)}>⚙️ Setup Pool</button>}
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: 'var(--gray-200)', borderRadius: 10, padding: 4, width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 4, width: 'fit-content' }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             padding: '9px 18px', border: 'none', borderRadius: 8, cursor: 'pointer',
             fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 13, transition: 'all 0.2s',
-            background: tab === t.id ? 'var(--green-field)' : 'transparent',
-            color: tab === t.id ? '#fff' : 'var(--text-muted)',
+            background: tab === t.id ? 'linear-gradient(135deg, #FFD700, #B8860B)' : 'transparent',
+            color: tab === t.id ? 'var(--purple-deep)' : 'var(--text-muted)',
           }}>{t.label}</button>
         ))}
       </div>
@@ -745,9 +745,9 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
           <div className="card empty-state"><div style={{ fontSize: 40 }}>🏅</div><p style={{ marginTop: 12 }}>Belum ada tim terdaftar.</p><button className="btn btn-primary" style={{ marginTop: 16 }} onClick={openAddTeam}>+ Add Team Pertama</button></div>
         ) : (
           <div className="card">
-            <div style={{ marginBottom: 14, fontSize: 12, color: 'var(--gray-600)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: 1 }}>{teams.length} teams registered</div>
+            <div style={{ marginBottom: 14, fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: 1 }}>{teams.length} teams registered</div>
             <table>
-              <thead><tr><th>#</th><th>Kode</th><th>Team Name</th><th>Asal</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>#</th><th>Kode</th><th>Team Name</th><th>Region</th><th>Aksi</th></tr></thead>
               <tbody>
                 {teams.map((t, i) => (
                   <tr key={t.id}>
