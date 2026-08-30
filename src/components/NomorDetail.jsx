@@ -558,7 +558,7 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
   const [tab, setTab] = useState('teams')
   const [showTeamModal, setShowTeamModal] = useState(false)
   const [editTeamId, setEditTeamId] = useState(null)
-  const [teamForm, setTeamForm] = useState({ name: '', origin: '', coach: '', captain: '', athletes: '', officials: '', code: '', logo: '' })
+  const [teamForm, setTeamForm] = useState({ name: '', origin: '', code: '', logo: '' })
   const [savingTeam, setSavingTeam] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [groups, setGroups] = useState([])
@@ -574,8 +574,8 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
   const getTeamName = (id) => teams.find(t => t.id === id)?.name || 'TBD'
   const getTeamLogo = (id) => teams.find(t => t.id === id)?.logo || ''
 
-  const openAddTeam = () => { setTeamForm({ name: '', origin: '', coach: '', captain: '', athletes: '', officials: '', code: '', logo: '' }); setEditTeamId(null); setShowTeamModal(true) }
-  const openEditTeam = (t) => { setTeamForm({ name: t.name, origin: t.origin || '', coach: t.coach || '', captain: t.captain || '', athletes: t.athletes || '', officials: t.officials || '', code: t.code || '', logo: t.logo || '' }); setEditTeamId(t.id); setShowTeamModal(true) }
+  const openAddTeam = () => { setTeamForm({ name: '', origin: '', code: '', logo: '' }); setEditTeamId(null); setShowTeamModal(true) }
+  const openEditTeam = (t) => { setTeamForm({ name: t.name, origin: t.origin || '', code: t.code || '', logo: t.logo || '' }); setEditTeamId(t.id); setShowTeamModal(true) }
 
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0]
@@ -747,7 +747,7 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
           <div className="card">
             <div style={{ marginBottom: 14, fontSize: 12, color: 'var(--gray-600)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: 1 }}>{teams.length} teams registered</div>
             <table>
-              <thead><tr><th>#</th><th>Kode</th><th>Team Name</th><th>Asal</th><th>Coach</th><th>Captain</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>#</th><th>Kode</th><th>Team Name</th><th>Asal</th><th>Aksi</th></tr></thead>
               <tbody>
                 {teams.map((t, i) => (
                   <tr key={t.id}>
@@ -765,8 +765,6 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
                       </div>
                     </td>
                     <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.origin || '—'}</td>
-                    <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.coach || '—'}</td>
-                    <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.captain || '—'}</td>
                     <td><div style={{ display: 'flex', gap: 8 }}>
                       <button className="btn btn-ghost" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => openEditTeam(t)}>Edit</button>
                       <button className="btn btn-danger" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => removeTeam(t.id)}>Delete</button>
@@ -934,13 +932,7 @@ export default function NomorDetail({ eventId, nomor, event, onBack }) {
               <div className="form-group" style={{ marginBottom: 0 }}><label>Team Name *</label><input value={teamForm.name} onChange={e => setTeamForm({ ...teamForm, name: e.target.value })} placeholder="Nama tim" autoFocus /></div>
               <div className="form-group" style={{ marginBottom: 0 }}><label>Region / Country</label><input value={teamForm.origin} onChange={e => setTeamForm({ ...teamForm, origin: e.target.value })} placeholder="Provinsi/Kabupaten" /></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 14 }}>
-              <div className="form-group" style={{ marginBottom: 0 }}><label>Coach</label><input value={teamForm.coach} onChange={e => setTeamForm({ ...teamForm, coach: e.target.value })} placeholder="Nama pelatih" /></div>
-              <div className="form-group" style={{ marginBottom: 0 }}><label>Captain</label><input value={teamForm.captain} onChange={e => setTeamForm({ ...teamForm, captain: e.target.value })} placeholder="Nama kapten" /></div>
-            </div>
-            <div className="form-group" style={{ marginTop: 14 }}><label>Athletes List</label><textarea rows={3} value={teamForm.athletes} onChange={e => setTeamForm({ ...teamForm, athletes: e.target.value })} placeholder="Pisahkan dengan koma" /></div>
-            <div className="form-group"><label>Manager & Officials</label><textarea rows={2} value={teamForm.officials} onChange={e => setTeamForm({ ...teamForm, officials: e.target.value })} placeholder="Manager: ..., Official: ..." /></div>
-            <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 12, marginTop: 14 }}>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveTeam} disabled={savingTeam}>{savingTeam ? <span className="spinner" /> : editTeamId ? 'Update' : 'Add Team'}</button>
               <button className="btn btn-ghost" onClick={() => setShowTeamModal(false)}>Cancel</button>
             </div>
