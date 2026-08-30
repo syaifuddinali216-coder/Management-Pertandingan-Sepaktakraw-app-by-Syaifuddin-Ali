@@ -142,7 +142,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
   const [tab, setTab] = useState('teams')
   const [showTeamModal, setShowTeamModal] = useState(false)
   const [editTeamId, setEditTeamId] = useState(null)
-  const [teamForm, setTeamForm] = useState({ name: '', origin: '', coach: '', code: '', logo: '' })
+  const [teamForm, setTeamForm] = useState({ name: '', origin: '', code: '', logo: '' })
   const [savingTeam, setSavingTeam] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
 
@@ -170,8 +170,8 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
   const getSubName = (teamId, sub) => `${getTeamName(teamId)} ${sub}`
 
   // ── Team CRUD ─────────────────────────────────────────────
-  const openAddTeam = () => { setTeamForm({ name: '', origin: '', coach: '', code: '', logo: '' }); setEditTeamId(null); setShowTeamModal(true) }
-  const openEditTeam = (t) => { setTeamForm({ name: t.name, origin: t.origin || '', coach: t.coach || '', code: t.code || '', logo: t.logo || '' }); setEditTeamId(t.id); setShowTeamModal(true) }
+  const openAddTeam = () => { setTeamForm({ name: '', origin: '', code: '', logo: '' }); setEditTeamId(null); setShowTeamModal(true) }
+  const openEditTeam = (t) => { setTeamForm({ name: t.name, origin: t.origin || '', code: t.code || '', logo: t.logo || '' }); setEditTeamId(t.id); setShowTeamModal(true) }
 
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0]
@@ -421,7 +421,7 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
           <div className="card">
             <div style={{ marginBottom: 14, fontSize: 12, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: 1 }}>{teams.length} tim terdaftar</div>
             <table>
-              <thead><tr><th>#</th><th>Kode</th><th>Team Name</th><th>Asal</th><th>Coach</th><th>Sub-Tim</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>#</th><th>Kode</th><th>Team Name</th><th>Asal</th><th>Sub-Tim</th><th>Aksi</th></tr></thead>
               <tbody>
                 {teams.map((t, i) => (
                   <tr key={t.id}>
@@ -434,7 +434,6 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
                       </div>
                     </td>
                     <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.origin || '—'}</td>
-                    <td style={{ color: 'rgba(255,255,255,0.6)' }}>{t.coach || '—'}</td>
                     <td style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)' }}>{t.name} 1, {t.name} 2, {t.name} 3</td>
                     <td><div style={{ display: 'flex', gap: 8 }}>
                       <button className="btn btn-ghost" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => openEditTeam(t)}>Edit</button>
@@ -735,9 +734,8 @@ export default function TeamNomorDetail({ eventId, nomor, event, onBack }) {
               <div className="form-group" style={{ marginBottom: 0 }}><label>Team Name *</label><input value={teamForm.name} onChange={e => setTeamForm({ ...teamForm, name: e.target.value })} placeholder="Contoh: Jakarta" autoFocus /></div>
               <div className="form-group" style={{ marginBottom: 0 }}><label>🏷️ Team Code</label><input value={teamForm.code} onChange={e => setTeamForm({ ...teamForm, code: e.target.value.toUpperCase() })} placeholder="A1, B2..." style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }} /></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 14 }}>
+            <div style={{ marginTop: 14 }}>
               <div className="form-group" style={{ marginBottom: 0 }}><label>Region / Country</label><input value={teamForm.origin} onChange={e => setTeamForm({ ...teamForm, origin: e.target.value })} placeholder="Provinsi/Kota" /></div>
-              <div className="form-group" style={{ marginBottom: 0 }}><label>Coach</label><input value={teamForm.coach} onChange={e => setTeamForm({ ...teamForm, coach: e.target.value })} placeholder="Nama pelatih" /></div>
             </div>
             {teamForm.name && (
               <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(255,215,0,0.06)', borderRadius: 8, fontSize: 12 }}>
