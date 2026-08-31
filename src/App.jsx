@@ -5,6 +5,7 @@ import { auth, db } from './firebase.js'
 import AuthPage from './pages/AuthPage.jsx'
 import MainApp from './pages/MainApp.jsx'
 import ScoreboardDisplay from './pages/ScoreboardDisplay.jsx'
+import EventTVDisplay from './pages/EventTVDisplay.jsx'
 import logo from './logo.png'
 import istafLogo from './istaf-logo.png'
 
@@ -14,9 +15,12 @@ export const useApp = () => useContext(AppContext)
 const SECRET_CODE = 'Sepaktakraw Indonesia'
 
 // Standalone display mode: opened as a separate browser tab (dragged to a
-// TV over HDMI) via ?display=scoreboard. Bypasses the sidebar/app chrome
-// entirely and just renders the live scoreboard full-screen.
-const isDisplayMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('display') === 'scoreboard'
+// TV over HDMI) via ?display=scoreboard or ?display=event&eventId=xxx.
+// Bypasses the sidebar/app chrome entirely and just renders full-screen.
+const displayParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+const isScoreboardDisplay = displayParams?.get('display') === 'scoreboard'
+const isEventDisplay = displayParams?.get('display') === 'event'
+const eventDisplayId = displayParams?.get('eventId') || null
 
 // Shown when someone has just passed Google Sign-In but doesn't have an
 // app profile yet — they're held here (never touching the Dashboard) until
@@ -161,10 +165,12 @@ export default function App() {
     )
   }
 
-  if (isDisplayMode) {
+  if (isScoreboardDisplay || isEventDisplay) {
     return (
       <AppContext.Provider value={{ user, showToast }}>
-        {user ? <ScoreboardDisplay /> : (
+        {user ? (
+          isEventDisplay ? <EventTVDisplay eventId={eventDisplayId} /> : <ScoreboardDisplay />
+        ) : (
           <div style={{ minHeight: '100vh', background: '#0a0515', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, fontFamily: 'var(--font-body)' }}>
             <p>Silakan login dulu di tab utama aplikasi, lalu refresh tab ini.</p>
           </div>
