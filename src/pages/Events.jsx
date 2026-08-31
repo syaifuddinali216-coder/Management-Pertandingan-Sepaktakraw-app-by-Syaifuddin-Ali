@@ -9,6 +9,8 @@ export default function Events() {
   const [editId, setEditId] = useState(null)
   const [form, setForm] = useState({ name: '', location: '', date: '', organizer: '', description: '', status: 'persiapan' })
   const [saving, setSaving] = useState(false)
+  const [tvEventId, setTvEventId] = useState(null)
+  const [tvDuration, setTvDuration] = useState(10)
 
   const openAdd = () => { setForm({ name: '', location: '', date: '', organizer: '', description: '', status: 'persiapan' }); setEditId(null); setShowModal(true) }
   const openEdit = (ev) => { setForm({ name: ev.name, location: ev.location || '', date: ev.date || '', organizer: ev.organizer || '', description: ev.description || '', status: ev.status || 'persiapan' }); setEditId(ev.id); setShowModal(true) }
@@ -25,6 +27,17 @@ export default function Events() {
   const remove = async (id) => {
     if (!confirm('Delete this event? All data inside will also be deleted.')) return
     await deleteEvent(id)
+  }
+
+  const openTvSettings = (ev) => {
+    setTvDuration(ev.tvDisplayDuration || 10)
+    setTvEventId(ev.id)
+  }
+
+  const openTvDisplay = async () => {
+    await updateEvent(tvEventId, { tvDisplayDuration: parseInt(tvDuration) || 10 })
+    const url = window.location.origin + window.location.pathname + `?display=event&eventId=${tvEventId}`
+    window.open(url, '_blank', 'noopener')
   }
 
   const statusLabel = { persiapan: 'Preparation', berlangsung: 'Ongoing', selesai: 'Finished' }
@@ -67,6 +80,7 @@ export default function Events() {
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                   <button className="btn btn-primary" style={{ padding: '7px 16px', fontSize: 13 }} onClick={() => navigate('event-detail', ev.id)}>Buka</button>
+                  <button className="btn btn-ghost" style={{ padding: '7px 10px', fontSize: 13 }} onClick={() => openTvSettings(ev)} title="Buka TV Display">📺</button>
                   <button className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 13 }} onClick={() => openEdit(ev)}>Edit</button>
                   <button className="btn btn-danger" style={{ padding: '7px 14px', fontSize: 13 }} onClick={() => remove(ev.id)}>Delete</button>
                 </div>
@@ -115,6 +129,25 @@ export default function Events() {
                 {saving ? <span className="spinner" /> : editId ? 'Update Event' : 'Create Event'}
               </button>
               <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tvEventId && (
+        <div className="modal-overlay" onClick={() => setTvEventId(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>📺 EVENT TV DISPLAY</h2>
+            <p style={{ fontSize: 13, color: 'var(--gray-600)', marginBottom: 20 }}>
+              Tampilan ini bergeser otomatis nunjukin klasemen, hasil pertandingan, dan bracket dari semua nomor di event ini. Cocok buat TV umum/lobby.
+            </p>
+            <div className="form-group">
+              <label>Durasi tiap slide (detik)</label>
+              <input type="number" min="3" max="120" value={tvDuration} onChange={e => setTvDuration(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={openTvDisplay}>📺 Buka Display</button>
+              <button className="btn btn-ghost" onClick={() => setTvEventId(null)}>Cancel</button>
             </div>
           </div>
         </div>
