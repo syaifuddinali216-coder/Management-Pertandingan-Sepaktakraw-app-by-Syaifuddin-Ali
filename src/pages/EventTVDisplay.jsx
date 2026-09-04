@@ -308,10 +308,12 @@ export default function EventTVDisplay({ eventId }) {
                 const { hw, aw } = calcTeamMatchResult(m.subMatches || [])
                 return (
                   <div key={m.id} style={{ padding: '1.3vh 1.6vw', background: 'rgba(255,255,255,0.05)', borderRadius: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.2vw', marginBottom: '1.2vh' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1vw', marginBottom: '1.2vh' }}>
+                      <TeamLogo src={teamLogo(slide.teams, m.homeId)} name={teamName(slide.teams, m.homeId)} size={34} />
                       <span style={{ fontSize: '1.5vw', color: hw > aw ? '#FFD700' : '#fff', fontWeight: hw > aw ? 700 : 500 }}>{teamName(slide.teams, m.homeId)}</span>
                       <span style={{ fontSize: '1.8vw', color: '#FFD700', fontFamily: 'var(--font-mono)', fontWeight: 800 }}>{hw} — {aw}</span>
                       <span style={{ fontSize: '1.5vw', color: aw > hw ? '#FFD700' : '#fff', fontWeight: aw > hw ? 700 : 500 }}>{teamName(slide.teams, m.awayId)}</span>
+                      <TeamLogo src={teamLogo(slide.teams, m.awayId)} name={teamName(slide.teams, m.awayId)} size={34} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6vh' }}>
                       {(m.subMatches || []).map((sm, si) => {
@@ -363,18 +365,6 @@ export default function EventTVDisplay({ eventId }) {
           </div>
         ) : null}
       </div>
-
-      {/* Slide progress dots */}
-      {slides.length > 1 && (
-        <div style={{ display: 'flex', gap: '0.6vw', marginTop: '2vh' }}>
-          {slides.map((_, i) => (
-            <div key={i} style={{
-              width: i === slideIndex ? '2.2vw' : '0.7vw', height: '0.7vw', borderRadius: 999,
-              background: i === slideIndex ? '#FFD700' : 'rgba(255,255,255,0.25)', transition: 'all 0.3s',
-            }} />
-          ))}
-        </div>
-      )}
 
       <style>{`body { margin: 0; }`}</style>
     </div>
