@@ -11,6 +11,7 @@ import Schedule from './Schedule.jsx'
 import TeamData from './TeamData.jsx'
 import ScoreboardControl from './ScoreboardControl.jsx'
 import PerformanceAnalysis from './PerformanceAnalysis.jsx'
+import Officials from './Officials.jsx'
 
 export const NavContext = createContext(null)
 export const useNav = () => useContext(NavContext)
@@ -70,6 +71,7 @@ export default function MainApp() {
     'team-data': <TeamData />,
     scoreboard: <ScoreboardControl />,
     'performance-analysis': <PerformanceAnalysis />,
+    officials: <Officials />,
   }
 
   return (
