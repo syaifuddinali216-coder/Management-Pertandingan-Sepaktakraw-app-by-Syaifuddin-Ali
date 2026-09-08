@@ -11,6 +11,7 @@ const navItems = [
   { id: 'team-data', label: 'Team Data', icon: '👥' },
   { id: 'scoreboard', label: 'Scoreboard', icon: '📟' },
   { id: 'performance-analysis', label: 'Performance Analysis', icon: '📈' },
+  { id: 'officials', label: 'Officials Directory', icon: '🎖️' },
 ]
 
 export default function Sidebar({ currentPage, onLogout }) {
