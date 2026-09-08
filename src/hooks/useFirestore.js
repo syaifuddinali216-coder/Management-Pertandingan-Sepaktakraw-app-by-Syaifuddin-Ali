@@ -294,3 +294,37 @@ export function usePerformanceMatches(eventId) {
 
   return { matches, loading, addMatch, updateMatch, deleteMatch }
 }
+
+// ── Officials Directory (global — ITO, ISTAF Member, ASTAF Member, Referee) ──
+// Stored at users/{uid}/officials, each doc has a `category` field
+// ('ito' | 'istaf' | 'astaf' | 'referee') plus category-specific fields.
+// Not scoped to any Event — this is a standing federation membership
+// registry, independent from any particular tournament.
+export function useOfficials(category) {
+  const { user } = useApp()
+  const [officials, setOfficials] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user || !category) { setOfficials([]); setLoading(false); return }
+    setLoading(true)
+    const q = query(
+      collection(db, 'users', user.uid, 'officials'),
+      where('category', '==', category)
+    )
+    const unsub = onSnapshot(q, snap => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      list.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0))
+      setOfficials(list)
+      setLoading(false)
+    }, err => { console.error('useOfficials error:', err); setLoading(false) })
+    return unsub
+  }, [user, category])
+
+  const base = () => collection(db, 'users', user.uid, 'officials')
+  const addOfficial = (data) => addDoc(base(), { ...data, category, createdAt: serverTimestamp() })
+  const updateOfficial = (id, data) => updateDoc(doc(db, 'users', user.uid, 'officials', id), data)
+  const deleteOfficial = (id) => deleteDoc(doc(db, 'users', user.uid, 'officials', id))
+
+  return { officials, loading, addOfficial, updateOfficial, deleteOfficial }
+}
