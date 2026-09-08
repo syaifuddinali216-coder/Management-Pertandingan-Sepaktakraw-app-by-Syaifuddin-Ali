@@ -42,7 +42,7 @@ export default function Sidebar({ currentPage, onLogout }) {
           </div>
         </div>
       </div>
-      <nav style={{ flex: 1, padding: '16px 10px' }}>
+      <nav style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 10px' }}>
         {navItems.map(item => {
           const isActive = currentPage === item.id
           return (
