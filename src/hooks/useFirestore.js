@@ -228,7 +228,9 @@ const emptyScoreboard = {
   sets: [{ a: 0, b: 0 }, { a: 0, b: 0 }, { a: 0, b: 0 }],
   currentSet: 0,
   timerRunning: false,
-  timerEndAt: null,      // epoch ms — valid while timerRunning
+  timerSession: null,    // id of the current countdown run (clock-skew safe)
+  timerDuration: 0,      // seconds — length of the current run
+  timerEndAt: null,      // legacy, no longer used for the countdown
   timerRemaining: 0,     // seconds — valid while paused/stopped
   timerLabel: '',
   challengeType: null,   // 'line' | 'net' | 'service' | null
