@@ -2,17 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { useScoreboard } from '../hooks/useFirestore.js'
 import TeamLogo from '../components/TeamLogo.jsx'
 import { CHALLENGE_TYPES } from '../utils/challengeTypes.js'
-
-function formatTime(totalSeconds) {
-  const s = Math.max(0, Math.round(totalSeconds))
-  const m = Math.floor(s / 60)
-  const sec = s % 60
-  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-}
+import { useCountdown, formatTime } from '../utils/useCountdown.js'
 
 export default function ScoreboardDisplay() {
   const { data, loading } = useScoreboard()
-  const [, forceTick] = useState(0)
+  const remainingSeconds = useCountdown(data)
 
   useEffect(() => {
     // Reflect the court name (and event title if set) in the browser tab
@@ -24,12 +18,6 @@ export default function ScoreboardDisplay() {
       : 'Live Scoreboard — Sepaktakraw GMS'
   }, [data.courtName])
 
-  useEffect(() => {
-    if (!data.timerRunning) return
-    const iv = setInterval(() => forceTick(t => t + 1), 250)
-    return () => clearInterval(iv)
-  }, [data.timerRunning])
-
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: '#0a0515', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -37,10 +25,6 @@ export default function ScoreboardDisplay() {
       </div>
     )
   }
-
-  const remainingSeconds = data.timerRunning
-    ? Math.max(0, (data.timerEndAt - Date.now()) / 1000)
-    : data.timerRemaining
 
   const activeSet = data.sets[data.currentSet]
   const timerLow = data.timerRunning && remainingSeconds <= 10
