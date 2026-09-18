@@ -16,8 +16,13 @@ export function useCountdown(data) {
   const anchorRef = useRef({ session: null, startedAt: 0 })
 
   const running = !!data.timerRunning
-  const session = data.timerSession || null
-  const duration = Number(data.timerDuration) || 0
+  // Fall back to timerRemaining so a document written before timerDuration
+  // existed (or one that lost the field) still counts down instead of
+  // freezing at 00:00.
+  const duration = Number(data.timerDuration) || Number(data.timerRemaining) || 0
+  // Fall back to a duration-based key so a running timer without an explicit
+  // session id still gets anchored rather than being stuck at zero.
+  const session = data.timerSession || (running ? `legacy_${duration}_${data.timerLabel || ''}` : null)
 
   if (running && session && anchorRef.current.session !== session) {
     anchorRef.current = { session, startedAt: Date.now() }
@@ -33,6 +38,7 @@ export function useCountdown(data) {
   }, [running])
 
   if (!running) return Math.max(0, Number(data.timerRemaining) || 0)
+  if (!anchorRef.current.startedAt) return duration
 
   const elapsed = (Date.now() - anchorRef.current.startedAt) / 1000
   // Clamped to the chosen duration so a corrupt/legacy value can never
