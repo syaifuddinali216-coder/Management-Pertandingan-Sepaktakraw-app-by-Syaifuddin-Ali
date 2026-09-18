@@ -4,6 +4,7 @@ import { useScoreboard } from '../hooks/useFirestore.js'
 import TeamLogo from '../components/TeamLogo.jsx'
 import { compressImage } from '../utils/imageCompress.js'
 import { CHALLENGE_TYPES } from '../utils/challengeTypes.js'
+import { useCountdown, formatTime, newTimerSession } from '../utils/useCountdown.js'
 
 const TIMER_PRESETS = [
   { label: 'Time Out', seconds: 60 },
@@ -11,38 +12,21 @@ const TIMER_PRESETS = [
   { label: 'Jeda Antar Game', seconds: 300 },
 ]
 
-function formatTime(totalSeconds) {
-  const s = Math.max(0, Math.round(totalSeconds))
-  const m = Math.floor(s / 60)
-  const sec = s % 60
-  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-}
-
 export default function ScoreboardControl() {
   const { showToast } = useApp()
   const { data, loading, save } = useScoreboard()
   const [uploadingLogo, setUploadingLogo] = useState(null) // 'A' | 'B' | null
   const [customMinutes, setCustomMinutes] = useState('')
   const [customSeconds, setCustomSeconds] = useState('')
-  const [tick, setTick] = useState(0)
 
-  // Local ticking clock for smooth countdown display while timer is running
+  const remainingSeconds = useCountdown(data)
+
+  // Auto-stop once it reaches zero
   useEffect(() => {
-    if (!data.timerRunning) return
-    const iv = setInterval(() => setTick(t => t + 1), 250)
-    return () => clearInterval(iv)
-  }, [data.timerRunning])
-
-  const remainingSeconds = data.timerRunning
-    ? Math.max(0, (data.timerEndAt - Date.now()) / 1000)
-    : data.timerRemaining
-
-  // Auto-stop locally when it hits zero (server state settles next save)
-  useEffect(() => {
-    if (data.timerRunning && data.timerEndAt && Date.now() >= data.timerEndAt) {
-      save({ timerRunning: false, timerRemaining: 0 })
+    if (data.timerRunning && remainingSeconds <= 0) {
+      save({ timerRunning: false, timerRemaining: 0, timerSession: null })
     }
-  }, [tick]) // eslint-disable-line
+  }, [remainingSeconds, data.timerRunning]) // eslint-disable-line
 
   const handleLogoUpload = async (team, e) => {
     const file = e.target.files?.[0]
@@ -93,20 +77,25 @@ export default function ScoreboardControl() {
 
   const startTimer = (seconds, label) => {
     if (!seconds || seconds <= 0) return showToast('Durasi timer tidak valid!')
-    save({ timerRunning: true, timerEndAt: Date.now() + seconds * 1000, timerRemaining: seconds, timerLabel: label })
+    if (seconds > 7200) return showToast('Durasi timer maksimal 120 menit!')
+    save({
+      timerRunning: true, timerSession: newTimerSession(), timerDuration: seconds,
+      timerRemaining: seconds, timerLabel: label, timerEndAt: null,
+    })
   }
 
   const pauseTimer = () => {
-    save({ timerRunning: false, timerRemaining: remainingSeconds })
+    save({ timerRunning: false, timerRemaining: Math.round(remainingSeconds), timerSession: null })
   }
 
   const resumeTimer = () => {
-    if (remainingSeconds <= 0) return
-    save({ timerRunning: true, timerEndAt: Date.now() + remainingSeconds * 1000 })
+    const left = Math.round(remainingSeconds)
+    if (left <= 0) return
+    save({ timerRunning: true, timerSession: newTimerSession(), timerDuration: left, timerRemaining: left })
   }
 
   const resetTimer = () => {
-    save({ timerRunning: false, timerEndAt: null, timerRemaining: 0, timerLabel: '' })
+    save({ timerRunning: false, timerSession: null, timerDuration: 0, timerRemaining: 0, timerLabel: '', timerEndAt: null })
   }
 
   const openDisplay = () => {
